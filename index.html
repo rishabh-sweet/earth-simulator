@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Earth & Solar System</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- Three.js renders into this canvas -->
+    <canvas id="canvas"></canvas>
+
+    <!-- Black layer that fades in/out during the view transitions -->
+    <div id="fade"></div>
+
+    <!-- Focused-body overlay: connector lines + name + data callouts -->
+    <div id="info">
+      <svg id="info-lines"></svg>
+      <div id="info-name"></div>
+      <div id="info-callouts"></div>
+    </div>
+
+    <!-- Buttons + on-screen hint -->
+    <button id="btn-back" class="ui-btn">← Back</button>
+    <button id="btn-earth" class="ui-btn">⌂ Earth view</button>
+    <div id="hint"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

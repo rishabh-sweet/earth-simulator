@@ -1,0 +1,26 @@
+TEXTURE CREDITS
+===============
+
+Planet, Sun, Moon, Saturn ring and Milky Way textures
+------------------------------------------------------
+Source : Solar System Scope  —  https://www.solarsystemscope.com/textures/
+Author : INOVE / Solar System Scope
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+         https://creativecommons.org/licenses/by/4.0/
+Notes  : Free to use with attribution. These maps are based on real NASA
+         elevation and imagery data. The 2K versions are used here.
+
+Files in this folder that come from Solar System Scope:
+  sun.jpg, mercury.jpg, venus.jpg, mars.jpg, jupiter.jpg, saturn.jpg,
+  saturn_ring.png, uranus.jpg, neptune.jpg, moon.jpg, milky_way.jpg
+
+(Downloaded via the Wikimedia Commons / jsDelivr mirrors of the same
+ Solar System Scope files, because the solarsystemscope.com server blocks
+ automated downloads. The image content is identical to the originals.)
+
+Earth day & night maps
+-----------------------
+Source : NASA Visible Earth — "Blue Marble" and "Black Marble / Earth's
+         City Lights"  —  https://visibleearth.nasa.gov/
+License: Public domain (NASA imagery).
+Files  : earth_daymap.jpg, earth_nightmap.jpg
