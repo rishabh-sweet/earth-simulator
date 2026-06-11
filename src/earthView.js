@@ -8,7 +8,7 @@ import { getSunDirection } from './sun.js';
 // The close-up Earth — exactly the day/night globe from before, now packaged
 // as a self-contained "view" (its own scene, camera and controls) so the app
 // can switch between this and the solar-system view.
-export function createEarthView(canvas) {
+export function createEarthView(canvas, maxAnisotropy = 1) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
 
@@ -22,7 +22,7 @@ export function createEarthView(canvas) {
   controls.maxDistance = 12;   // lets you pull back to the "leave Earth" threshold
   controls.enablePan = false;
 
-  const earth = createEarth();
+  const earth = createEarth(maxAnisotropy);
   const atmosphere = createAtmosphere();
   scene.add(earth);
   scene.add(atmosphere);

@@ -5,7 +5,7 @@ import { buildSolarSystem } from './solarSystem.js';
 // The zoomed-out solar-system view: its own scene, camera and controls plus
 // the planets. It can "follow" a focused body (so a clicked planet stays put
 // on screen while it keeps orbiting) and report where that body is on screen.
-export function createSolarView(canvas) {
+export function createSolarView(canvas, maxAnisotropy = 1) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000003);
 
@@ -21,7 +21,7 @@ export function createSolarView(canvas) {
   // otherwise Earth-view scrolling would also drive the solar camera.
   controls.enabled = false;
 
-  const system = buildSolarSystem();
+  const system = buildSolarSystem(maxAnisotropy);
   scene.add(system.root);
 
   let focused = null;                 // body we're tracking, or null

@@ -8,7 +8,7 @@ import { SUN, PLANETS, MOON } from './planetData.js';
 //
 // Each body object also gets a `.object3d` reference so other code can ask
 // where it currently is in the world (for camera flights and labels).
-export function buildSolarSystem() {
+export function buildSolarSystem(maxAnisotropy = 1) {
   const root = new THREE.Group();
   const clickable = [];
   const spinners = []; // { mesh, speed } — things that rotate on their axis
@@ -18,6 +18,7 @@ export function buildSolarSystem() {
   const colorTex = (path) => {
     const t = loader.load(path);
     t.colorSpace = THREE.SRGBColorSpace; // these are color photos
+    t.anisotropy = maxAnisotropy;        // keep them sharp at grazing angles
     return t;
   };
 

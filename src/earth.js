@@ -3,14 +3,21 @@ import * as THREE from 'three';
 // --- Vertex shader ---
 // Pass the texture coordinate and the world-space surface normal (the normal
 // rotated to follow the spinning globe) along to the fragment shader.
+// The logdepthbuf includes make this custom shader write the SAME depth values
+// as three.js' built-in materials when the renderer uses a logarithmic depth
+// buffer — without them the Earth's depth wouldn't match the starfield's, and
+// stars would punch through the globe.
 const vertexShader = /* glsl */ `
   varying vec2 vUv;
   varying vec3 vWorldNormal;
+  #include <common>
+  #include <logdepthbuf_pars_vertex>
 
   void main() {
     vUv = uv;
     vWorldNormal = normalize(mat3(modelMatrix) * normal);
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    #include <logdepthbuf_vertex>
   }
 `;
 
@@ -24,8 +31,10 @@ const fragmentShader = /* glsl */ `
 
   varying vec2 vUv;
   varying vec3 vWorldNormal;
+  #include <logdepthbuf_pars_fragment>
 
   void main() {
+    #include <logdepthbuf_fragment>
     vec3 normal = normalize(vWorldNormal);
 
     // How directly this point faces the Sun: +1 = noon, 0 = sunrise/sunset, -1 = midnight.
@@ -61,17 +70,21 @@ const fragmentShader = /* glsl */ `
 `;
 
 // Build the Earth: a sphere driven by the custom day/night shader above.
-export function createEarth() {
+// `maxAnisotropy` (from the renderer) keeps the textures sharp at grazing
+// angles near the horizon instead of looking blocky or seamed.
+export function createEarth(maxAnisotropy = 1) {
   const geometry = new THREE.SphereGeometry(1, 64, 64);
   const loader = new THREE.TextureLoader();
 
   // Daytime "Blue Marble" photo. It's a color image, so decode it from sRGB.
   const dayTexture = loader.load('/textures/earth_daymap.jpg');
   dayTexture.colorSpace = THREE.SRGBColorSpace;
+  dayTexture.anisotropy = maxAnisotropy;
 
   // Night-time "Black Marble" city lights, same projection so it lines up.
   const nightTexture = loader.load('/textures/earth_nightmap.jpg');
   nightTexture.colorSpace = THREE.SRGBColorSpace;
+  nightTexture.anisotropy = maxAnisotropy;
 
   const material = new THREE.ShaderMaterial({
     uniforms: {
@@ -82,6 +95,9 @@ export function createEarth() {
     },
     vertexShader,
     fragmentShader,
+    transparent: false, // the globe is fully opaque...
+    depthWrite: true,   // ...and writes to the depth buffer, so it always
+    depthTest: true,    //    occludes the starfield sitting far behind it.
   });
 
   return new THREE.Mesh(geometry, material);

@@ -3,15 +3,19 @@ import * as THREE from 'three';
 // --- Vertex shader ---
 // The fragment shader needs two normals: one in view space (to find the
 // glowing rim at the planet's edge) and one in world space (to tell which
-// side of the planet faces the Sun).
+// side of the planet faces the Sun). The logdepthbuf includes keep this
+// custom shader's depth consistent with the rest of the scene.
 const vertexShader = /* glsl */ `
   varying vec3 vViewNormal;
   varying vec3 vWorldNormal;
+  #include <common>
+  #include <logdepthbuf_pars_vertex>
 
   void main() {
     vViewNormal = normalize(normalMatrix * normal);
     vWorldNormal = normalize(mat3(modelMatrix) * normal);
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    #include <logdepthbuf_vertex>
   }
 `;
 
@@ -23,8 +27,10 @@ const fragmentShader = /* glsl */ `
 
   varying vec3 vViewNormal;
   varying vec3 vWorldNormal;
+  #include <logdepthbuf_pars_fragment>
 
   void main() {
+    #include <logdepthbuf_fragment>
     // Fresnel-style rim: brightest where the surface grazes the camera.
     float rim = pow(0.65 - dot(vViewNormal, vec3(0.0, 0.0, 1.0)), 4.0);
     rim = max(rim, 0.0);

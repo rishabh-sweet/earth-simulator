@@ -12,9 +12,13 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, logarithmicD
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 
+// Sharpest texture filtering the GPU supports — shared by both views so the
+// planet surfaces stay crisp at grazing angles instead of blocky/seamed.
+const maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
+
 // ── The two views ────────────────────────────────────────────────────────────
-const earthView = createEarthView(canvas);
-const solarView = createSolarView(canvas);
+const earthView = createEarthView(canvas, maxAnisotropy);
+const solarView = createSolarView(canvas, maxAnisotropy);
 const infoPanel = createInfoPanel();
 
 // ── Overlay DOM ──────────────────────────────────────────────────────────────
