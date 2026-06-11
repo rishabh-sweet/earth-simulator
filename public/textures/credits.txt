@@ -28,7 +28,11 @@ Files  : earth_daymap.jpg, earth_nightmap.jpg
 Earth cloud map
 ---------------
 Source : Planet Pixel Emporium  —  https://planetpixelemporium.com/earth.html
+         (planetpixelemporium.com was unreachable here, so the file was fetched
+          from the MIT-licensed threex.planets mirror,
+          https://github.com/jeromeetienne/threex.planets — the image content is
+          James Hastings-Trew's original cloud map.)
 Author : James Hastings-Trew
 License: Free to use for any purpose; a credit/link back is appreciated.
-File   : earthcloudmap.jpg  (white clouds on black; used as the cloud layer's
-         brightness + opacity mask)
+File   : earthcloudmap.jpg  (the grayscale cloud-transparency map: white = cloud,
+         black = clear; used as the cloud layer's opacity mask)

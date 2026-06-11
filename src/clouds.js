@@ -32,15 +32,18 @@ const fragmentShader = /* glsl */ `
 
   void main() {
     #include <logdepthbuf_fragment>
-    float cloud = texture2D(cloudTexture, vUv).r; // white = thick cloud
+    float cloudRaw = texture2D(cloudTexture, vUv).r; // white = thick cloud
+    // Boost contrast so only real cloud masses show and thin haze stays clear,
+    // keeping the continents and oceans visible underneath.
+    float cloud = smoothstep(0.55, 0.96, cloudRaw);
 
     // Day/night, matched to the Earth's terminator.
     float sun = dot(normalize(vWorldNormal), sunDirection);
     float day = smoothstep(-0.1, 0.3, sun);
 
     // Bright white in daylight, dimming toward dusk; transparent at night.
-    vec3 color = vec3(1.0) * (0.35 + 0.65 * day);
-    float alpha = cloud * day * 0.85;
+    vec3 color = vec3(1.0) * (0.4 + 0.6 * day);
+    float alpha = cloud * day * 0.6; // semi-transparent so the surface shows through
 
     gl_FragColor = vec4(color, alpha);
   }
