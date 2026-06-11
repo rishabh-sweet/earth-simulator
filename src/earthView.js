@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createEarth } from './earth.js';
 import { createAtmosphere } from './atmosphere.js';
+import { createClouds } from './clouds.js';
 import { createStarfield } from './starfield.js';
 import { getSunDirection } from './sun.js';
 
@@ -23,16 +24,20 @@ export function createEarthView(canvas, maxAnisotropy = 1) {
   controls.enablePan = false;
 
   const earth = createEarth(maxAnisotropy);
+  const clouds = createClouds(maxAnisotropy);
   const atmosphere = createAtmosphere();
   scene.add(earth);
+  scene.add(clouds);
   scene.add(atmosphere);
   scene.add(createStarfield());
 
   function update(dt) {
     const sun = getSunDirection();
     earth.material.uniforms.sunDirection.value.copy(sun);
+    clouds.material.uniforms.sunDirection.value.copy(sun);
     atmosphere.material.uniforms.sunDirection.value.copy(sun);
-    earth.rotation.y += 0.048 * dt; // slow auto-spin (same speed as before)
+    earth.rotation.y += 0.048 * dt;  // slow auto-spin (same speed as before)
+    clouds.rotation.y += 0.062 * dt; // a touch faster, so clouds drift over the surface
   }
 
   function getDistance() {

@@ -24,3 +24,11 @@ Source : NASA Visible Earth — "Blue Marble" and "Black Marble / Earth's
          City Lights"  —  https://visibleearth.nasa.gov/
 License: Public domain (NASA imagery).
 Files  : earth_daymap.jpg, earth_nightmap.jpg
+
+Earth cloud map
+---------------
+Source : Planet Pixel Emporium  —  https://planetpixelemporium.com/earth.html
+Author : James Hastings-Trew
+License: Free to use for any purpose; a credit/link back is appreciated.
+File   : earthcloudmap.jpg  (white clouds on black; used as the cloud layer's
+         brightness + opacity mask)
