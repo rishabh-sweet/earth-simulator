@@ -57,7 +57,8 @@ export function createClouds(maxAnisotropy = 1) {
 
   const loader = new THREE.TextureLoader();
   const cloudTexture = loader.load('/textures/earthcloudmap.jpg');
-  cloudTexture.anisotropy = maxAnisotropy; // used as a brightness mask, so no sRGB decode
+  cloudTexture.colorSpace = THREE.LinearSRGBColorSpace; // a data mask, not a color photo
+  cloudTexture.anisotropy = maxAnisotropy;
 
   const material = new THREE.ShaderMaterial({
     uniforms: {

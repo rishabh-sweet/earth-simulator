@@ -66,7 +66,7 @@ export function buildSolarSystem(maxAnisotropy = 1) {
     system.add(tilt);
 
     const mesh = new THREE.Mesh(
-      new THREE.SphereGeometry(p.radius, 48, 48),
+      new THREE.SphereGeometry(p.radius, 64, 64),
       new THREE.MeshStandardMaterial({ map: colorTex(p.texture), roughness: 1, metalness: 0 })
     );
     mesh.userData.body = p;
@@ -77,7 +77,7 @@ export function buildSolarSystem(maxAnisotropy = 1) {
 
     // Saturn's rings — flat disc lying in the planet's tilted equator.
     if (p.rings) {
-      const ring = makeRing(p.rings, loader);
+      const ring = makeRing(p.rings, loader, maxAnisotropy);
       ring.userData.body = p; // clicking the rings selects Saturn
       tilt.add(ring);
       clickable.push(ring);
@@ -88,7 +88,7 @@ export function buildSolarSystem(maxAnisotropy = 1) {
       const moonPivot = new THREE.Group();
       system.add(moonPivot);
       const moonMesh = new THREE.Mesh(
-        new THREE.SphereGeometry(p.moon.radius, 32, 32),
+        new THREE.SphereGeometry(p.moon.radius, 64, 64),
         new THREE.MeshStandardMaterial({ map: colorTex(p.moon.texture), roughness: 1, metalness: 0 })
       );
       moonMesh.position.x = p.moon.orbitRadius;
@@ -129,9 +129,12 @@ function makeGlowSprite(radius) {
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, size, size);
 
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+
   const sprite = new THREE.Sprite(
     new THREE.SpriteMaterial({
-      map: new THREE.CanvasTexture(canvas),
+      map: tex,
       blending: THREE.AdditiveBlending,
       transparent: true,
       depthWrite: false,
@@ -143,7 +146,7 @@ function makeGlowSprite(radius) {
 
 // Saturn's rings. The ring texture is a thin strip (inner edge → outer edge),
 // so we remap the UVs to run that strip outward along the radius.
-function makeRing(rings, loader) {
+function makeRing(rings, loader, maxAnisotropy = 1) {
   const geo = new THREE.RingGeometry(rings.inner, rings.outer, 128);
   const pos = geo.attributes.position;
   const uv = geo.attributes.uv;
@@ -155,6 +158,7 @@ function makeRing(rings, loader) {
   }
   const tex = loader.load(rings.texture);
   tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = maxAnisotropy;
   const mesh = new THREE.Mesh(
     geo,
     new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, depthWrite: false })

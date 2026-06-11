@@ -8,7 +8,12 @@ import { tween, updateTweens } from './tween.js';
 // logarithmicDepthBuffer lets one camera handle both the 1-unit Earth and the
 // 1000s-of-units solar system without z-fighting.
 const canvas = document.getElementById('canvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, logarithmicDepthBuffer: true });
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+  antialias: true,            // smooth edges
+  logarithmicDepthBuffer: true,
+  precision: 'highp',         // full float precision in shaders (avoids cracking/banding)
+});
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 
