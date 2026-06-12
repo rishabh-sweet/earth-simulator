@@ -1,4 +1,4 @@
-// Wanderglobe landing — starfield, scroll reveals, hero parallax, nav.
+// Wanderglobe landing — starfield, scroll reveals, hero parallax, nav, login.
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -159,23 +159,159 @@ if (heroStage && !reducedMotion) {
   requestAnimationFrame(tickParallax);
 }
 
-// ── CTA form (preview placeholder) ───────────────────────────────────────────
-const ctaForm = document.querySelector('.cta-form');
-if (ctaForm) {
-  ctaForm.addEventListener('submit', (e) => {
+// ── Login modal ──────────────────────────────────────────────────────────────
+const overlay = document.getElementById('login');
+const loginClose = document.getElementById('login-close');
+const panesWrap = document.getElementById('login-panes');
+const panes = [
+  document.getElementById('pane-email'),
+  document.getElementById('pane-otp'),
+  document.getElementById('pane-profile'),
+];
+const pbars = overlay.querySelectorAll('.pbar');
+const plabel = document.getElementById('plabel');
+const emailInput = document.getElementById('f-email');
+const otpConfirm = document.getElementById('otp-confirm');
+const otpDigits = overlay.querySelectorAll('.otp-digit');
+let step = 0;
+let userEmail = '';
+
+// The saved traveller, if they've onboarded before.
+function getUser() {
+  try {
+    return JSON.parse(localStorage.getItem('wanderglobe_user'));
+  } catch {
+    return null;
+  }
+}
+
+function setStep(i, backwards = false) {
+  step = i;
+  panesWrap.classList.toggle('back', backwards);
+  panes.forEach((p, idx) => p.classList.toggle('is-active', idx === i));
+  pbars.forEach((b, idx) => b.classList.toggle('on', idx <= i));
+  plabel.textContent = `Step ${i + 1} of 3`;
+  const first = panes[i].querySelector('input');
+  if (first) setTimeout(() => first.focus(), 80);
+}
+
+function openLogin() {
+  overlay.classList.remove('leaving');
+  overlay.classList.add('open');
+  overlay.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  otpConfirm.hidden = true;
+  setStep(0);
+}
+
+function closeLogin() {
+  overlay.classList.remove('open');
+  overlay.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+// Every "Explore the Globe" trigger: returning users skip straight to the globe.
+document.querySelectorAll('.js-open-login').forEach((el) => {
+  el.addEventListener('click', (e) => {
     e.preventDefault();
-    const input = ctaForm.querySelector('input');
-    input.placeholder = 'Thanks — we\'ll be in touch!';
-    input.value = '';
-    input.disabled = true;
-    const btn = ctaForm.querySelector('button');
-    btn.textContent = "You're on the list";
-    btn.disabled = true;
+    const user = getUser();
+    if (user && user.name) {
+      window.location.href = '/globe/';
+      return;
+    }
+    openLogin();
+  });
+});
+
+loginClose.addEventListener('click', closeLogin);
+overlay.addEventListener('click', (e) => {
+  if (e.target === overlay) closeLogin();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && overlay.classList.contains('open')) closeLogin();
+});
+
+// Back buttons on steps 2 and 3
+overlay.querySelectorAll('[data-back]').forEach((btn) => {
+  btn.addEventListener('click', () => setStep(step - 1, true));
+});
+
+// Step 1 → "send" the OTP (demo only: confirmation text, no real email)
+panes[0].addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = emailInput.value.trim();
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    emailInput.classList.add('error');
+    emailInput.focus();
+    setTimeout(() => emailInput.classList.remove('error'), 1400);
+    return;
+  }
+  userEmail = email;
+  document.getElementById('otp-email').textContent = email;
+  document.getElementById('otp-email-2').textContent = email;
+  otpConfirm.hidden = false;
+  otpDigits.forEach((d) => (d.value = ''));
+  setTimeout(() => setStep(1), 1000); // let the confirmation register, then advance
+});
+
+// OTP boxes: type to advance, backspace to retreat, paste fills all six
+otpDigits.forEach((digit, i) => {
+  digit.addEventListener('input', () => {
+    digit.value = digit.value.replace(/\D/g, '').slice(0, 1);
+    if (digit.value && i < otpDigits.length - 1) otpDigits[i + 1].focus();
+  });
+  digit.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && !digit.value && i > 0) otpDigits[i - 1].focus();
+  });
+  digit.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const text = (e.clipboardData.getData('text') || '').replace(/\D/g, '');
+    otpDigits.forEach((d, idx) => (d.value = text[idx] || ''));
+    otpDigits[Math.min(text.length, otpDigits.length - 1)].focus();
+  });
+});
+
+// Step 2 → verify (demo: any code passes)
+panes[1].addEventListener('submit', (e) => {
+  e.preventDefault();
+  setStep(2);
+});
+
+// Step 3 → save the traveller and fly to the globe
+panes[2].addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = document.getElementById('f-name').value.trim();
+  const age = document.getElementById('f-age').value;
+  const dob = document.getElementById('f-dob').value;
+  if (!name) {
+    const el = document.getElementById('f-name');
+    el.classList.add('error');
+    el.focus();
+    setTimeout(() => el.classList.remove('error'), 1400);
+    return;
+  }
+  localStorage.setItem(
+    'wanderglobe_user',
+    JSON.stringify({ name, age: Number(age) || null, dob: dob || null, email: userEmail })
+  );
+  overlay.classList.add('leaving'); // smooth fade out…
+  setTimeout(() => {
+    window.location.href = '/globe/'; // …then into the globe
+  }, 480);
+});
+
+// Returning traveller: greet them on the main CTAs
+const savedUser = getUser();
+if (savedUser && savedUser.name) {
+  document.querySelectorAll('.js-open-login .cta-label').forEach((label) => {
+    label.textContent = `Welcome back, ${savedUser.name} — Enter the Globe`;
   });
 }
 
 // ── Smooth anchor offset for fixed nav ───────────────────────────────────────
 document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+  // login triggers navigate or open the modal instead of scrolling
+  if (anchor.classList.contains('js-open-login')) return;
   anchor.addEventListener('click', (e) => {
     const id = anchor.getAttribute('href');
     if (id === '#') return;

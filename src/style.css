@@ -119,8 +119,34 @@ body {
 .ui-btn:hover {
   background: rgba(255, 255, 255, 0.15);
 }
-#btn-back { left: 22px; }
+#btn-back { left: 22px; top: 74px; } /* sits below the brand mark */
 #btn-earth { right: 22px; }
+
+/* ── Wanderglobe brand (top-left, returns to the landing page) ───────────── */
+#brand {
+  position: fixed;
+  top: 20px;
+  left: 22px;
+  z-index: 26;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #eef3ff;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 300;
+  letter-spacing: 0.03em;
+  opacity: 0.85;
+  transition: opacity 0.25s ease;
+}
+#brand:hover {
+  opacity: 1;
+}
+#brand svg {
+  width: 26px;
+  height: 26px;
+  filter: drop-shadow(0 0 8px rgba(91, 140, 255, 0.4));
+}
 
 /* ── Bottom hint line ────────────────────────────────────────────────────── */
 #hint {
