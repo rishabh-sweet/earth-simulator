@@ -3,6 +3,7 @@ import { createEarthView } from './earthView.js';
 import { createSolarView } from './solarView.js';
 import { createInfoPanel } from './infoPanel.js';
 import { tween, updateTweens } from './tween.js';
+import { SoundManager } from './sound.js';
 
 // ── Renderer (shared by both views) ──────────────────────────────────────────
 // logarithmicDepthBuffer lets one camera handle both the 1-unit Earth and the
@@ -30,7 +31,31 @@ const infoPanel = createInfoPanel();
 const fadeEl = document.getElementById('fade');
 const btnBack = document.getElementById('btn-back');
 const btnEarth = document.getElementById('btn-earth');
+const btnSound = document.getElementById('btn-sound');
 const hintEl = document.getElementById('hint');
+
+// ── Sound ────────────────────────────────────────────────────────────────────
+// All audio is synthesised live (see sound.js). It can't start until the user
+// interacts (browser autoplay policy), so we unlock it on the first gesture.
+const sound = new SoundManager();
+sound.setAmbient('earth'); // queued; begins once unlocked
+btnSound.classList.toggle('muted', !sound.isEnabled());
+btnSound.setAttribute('aria-pressed', String(sound.isEnabled()));
+
+function unlockAudio() {
+  sound.unlock();
+  window.removeEventListener('pointerdown', unlockAudio);
+  window.removeEventListener('keydown', unlockAudio);
+}
+window.addEventListener('pointerdown', unlockAudio);
+window.addEventListener('keydown', unlockAudio);
+
+btnSound.addEventListener('click', () => {
+  sound.unlock(); // the toggle itself is a valid first gesture
+  const on = sound.toggle();
+  btnSound.classList.toggle('muted', !on);
+  btnSound.setAttribute('aria-pressed', String(on));
+});
 
 // ── App state ────────────────────────────────────────────────────────────────
 let mode = 'earth';        // 'earth' (close-up) or 'solar'
@@ -97,9 +122,11 @@ function fade(to, duration, onComplete) {
 function goToSolar() {
   transitioning = true;
   earthView.controls.enabled = false;
+  sound.whoosh();
   flyCamera(earthView, new THREE.Vector3(0, 0, 16), ORIGIN, 700); // pull away from Earth
   fade(1, 650, () => {
     mode = 'solar';
+    sound.setAmbient('solar');
     focusedBody = null;
     solarView.clearFocus();
     solarView.controls.enabled = false;
@@ -120,12 +147,14 @@ function goToSolar() {
 function goToEarth() {
   transitioning = true;
   solarView.controls.enabled = false;
+  sound.reentry();
   infoPanel.hide();
   solarView.clearFocus();
   focusedBody = null;
   hideAllChrome();
   fade(1, 650, () => {
     mode = 'earth';
+    sound.setAmbient('earth');
     earthView.reset();
     earthView.controls.enabled = false;
     setHint('Zoom out to enter the solar system');
@@ -148,11 +177,13 @@ function focusBody(body) {
   solarView.controls.maxDistance = 800;
   btnBack.classList.add('visible');
   setHint('Tap empty space or “Back” to return');
+  sound.whoosh();
   flyToBody(body, () => {
     flying = false;
     solarView.controls.enabled = true;
     solarView.setFocus(body);
     infoPanel.show(body);
+    sound.chime();
   });
 }
 
@@ -184,8 +215,8 @@ function hideAllChrome() {
   btnBack.classList.remove('visible');
 }
 
-btnEarth.addEventListener('click', () => { if (mode === 'solar' && !busy()) goToEarth(); });
-btnBack.addEventListener('click', () => { if (mode === 'solar' && !busy() && focusedBody) unfocus(); });
+btnEarth.addEventListener('click', () => { sound.click(); if (mode === 'solar' && !busy()) goToEarth(); });
+btnBack.addEventListener('click', () => { sound.click(); if (mode === 'solar' && !busy() && focusedBody) unfocus(); });
 
 // ── Click / tap to select a body (or empty space to go back) ─────────────────
 const raycaster = new THREE.Raycaster();
@@ -212,6 +243,24 @@ window.addEventListener('pointerup', (e) => {
   const body = pick(e.clientX, e.clientY);
   if (body) focusBody(body);
   else if (focusedBody) unfocus();
+});
+
+// Hover a body in the solar view → play its unique tone (once per entry).
+let hoveredKey = null;
+let lastHoverCheck = 0;
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType === 'touch') return;          // touch has no hover
+  if (mode !== 'solar' || busy()) { hoveredKey = null; return; }
+  const now = performance.now();
+  if (now - lastHoverCheck < 60) return;          // throttle the raycast
+  lastHoverCheck = now;
+  const body = pick(e.clientX, e.clientY);
+  const key = body ? body.key : null;
+  if (key !== hoveredKey) {
+    hoveredKey = key;
+    if (key) sound.hover(key);
+    canvas.style.cursor = key ? 'pointer' : '';
+  }
 });
 
 // ── Resize ───────────────────────────────────────────────────────────────────

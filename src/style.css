@@ -148,6 +148,39 @@ body {
   filter: drop-shadow(0 0 8px rgba(91, 140, 255, 0.4));
 }
 
+/* ── Sound toggle (fixed bottom-right, always visible) ───────────────────── */
+.ui-icon {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  z-index: 26;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: #eef3ff;
+  cursor: pointer;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+.ui-icon:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+.ui-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.ui-icon .icon-off { display: none; }
+.ui-icon.muted { color: rgba(255, 255, 255, 0.5); }
+.ui-icon.muted .icon-on { display: none; }
+.ui-icon.muted .icon-off { display: block; }
+
 /* ── Bottom hint line ────────────────────────────────────────────────────── */
 #hint {
   position: fixed;
