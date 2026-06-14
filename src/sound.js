@@ -14,6 +14,7 @@ export class SoundManager {
     this.ambient = null; // current drone graph
     this.ambientType = null; // 'earth' | 'solar'
     this.desiredAmbient = null; // requested before audio is unlocked
+    this._rumbleNodes = null; // sustained black-hole rumble, while its card is open
     // Default ON; honour a saved preference.
     this.enabled = localStorage.getItem('wanderglobe_sound') !== 'off';
   }
@@ -209,6 +210,7 @@ export class SoundManager {
       uranus: [293.66, 'sine'],
       neptune: [261.63, 'triangle'],
       moon: [659.25, 'sine'],
+      blackhole: [49.0, 'sawtooth'],
     };
     const [freq, wave] = map[key] || [330, 'sine'];
     const t = this.ctx.currentTime;
@@ -337,6 +339,52 @@ export class SoundManager {
     osc.stop(t + duration);
     sub.stop(t + duration);
     lfo.stop(t + duration);
+  }
+
+  // Sustained black-hole rumble that fades in on click and out on close.
+  startRumble() {
+    if (!this.ctx || this._rumbleNodes) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = 30;
+    const sub = this.ctx.createOscillator();
+    sub.type = 'sine';
+    sub.frequency.value = 45;
+    const g = this.ctx.createGain();
+    g.gain.value = 0.0001;
+    g.gain.setTargetAtTime(0.55, t, 1.2); // slow fade-in
+    const lfo = this.ctx.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.value = 0.15;
+    const lfoG = this.ctx.createGain();
+    lfoG.gain.value = 0.28;
+    lfo.connect(lfoG).connect(g.gain);
+    osc.connect(g);
+    sub.connect(g);
+    this._send(g, 0.7);
+    osc.start(t);
+    sub.start(t);
+    lfo.start(t);
+    this._rumbleNodes = { osc, sub, lfo, g };
+  }
+
+  stopRumble() {
+    if (!this.ctx || !this._rumbleNodes) return;
+    const { osc, sub, lfo, g } = this._rumbleNodes;
+    this._rumbleNodes = null;
+    const t = this.ctx.currentTime;
+    g.gain.cancelScheduledValues(t);
+    g.gain.setTargetAtTime(0.0001, t, 0.7); // fade out
+    const stopAt = t + 3;
+    try {
+      osc.stop(stopAt);
+      sub.stop(stopAt);
+      lfo.stop(stopAt);
+    } catch (e) {}
+    setTimeout(() => {
+      try { g.disconnect(); } catch (e) {}
+    }, 3500);
   }
 
   // UI click: a tiny pitch-dropping oscillator burst.

@@ -147,6 +147,7 @@ function goToSolar() {
 function goToEarth() {
   transitioning = true;
   solarView.controls.enabled = false;
+  sound.stopRumble();
   sound.reentry();
   infoPanel.hide();
   solarView.clearFocus();
@@ -168,6 +169,7 @@ function goToEarth() {
 // ── Focusing a planet / the Sun ──────────────────────────────────────────────
 function focusBody(body) {
   if (body === focusedBody) return;
+  sound.stopRumble(); // in case we're switching away from the black hole
   infoPanel.hide();
   solarView.clearFocus();
   focusedBody = body;
@@ -178,6 +180,7 @@ function focusBody(body) {
   btnBack.classList.add('visible');
   setHint('Tap empty space or “Back” to return');
   sound.whoosh();
+  if (body.rumble) sound.startRumble(); // deep gravitational rumble on the black hole
   flyToBody(body, () => {
     flying = false;
     solarView.controls.enabled = true;
@@ -188,6 +191,7 @@ function focusBody(body) {
 }
 
 function unfocus() {
+  sound.stopRumble(); // black-hole rumble fades when its card closes
   infoPanel.hide();
   solarView.clearFocus();
   focusedBody = null;
@@ -221,12 +225,16 @@ btnBack.addEventListener('click', () => { sound.click(); if (mode === 'solar' &&
 // ── Click / tap to select a body (or empty space to go back) ─────────────────
 const raycaster = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
-function pick(clientX, clientY) {
+function pickHit(clientX, clientY) {
   ndc.x = (clientX / window.innerWidth) * 2 - 1;
   ndc.y = -(clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(ndc, solarView.camera);
   const hits = raycaster.intersectObjects(solarView.clickable, false);
-  return hits.length ? hits[0].object.userData.body : null;
+  return hits.length ? hits[0] : null;
+}
+function pick(clientX, clientY) {
+  const hit = pickHit(clientX, clientY);
+  return hit ? hit.object.userData.body : null;
 }
 
 // A tap is a press + release that barely moved (so it isn't a drag-rotate).
@@ -240,9 +248,17 @@ window.addEventListener('pointerup', (e) => {
   if (!d || mode !== 'solar' || busy()) return;
   const moved = Math.hypot(e.clientX - d.x, e.clientY - d.y);
   if (moved > 8 || performance.now() - d.t > 500) return; // it was a drag
-  const body = pick(e.clientX, e.clientY);
-  if (body) focusBody(body);
-  else if (focusedBody) unfocus();
+  const hit = pickHit(e.clientX, e.clientY);
+  const body = hit ? hit.object.userData.body : null;
+  if (body) {
+    // For an asteroid-belt rock, anchor the card's lines at the exact click.
+    if (body.dynamicAnchor && body !== focusedBody && body.object3d) {
+      body.object3d.position.copy(hit.point);
+    }
+    focusBody(body);
+  } else if (focusedBody) {
+    unfocus();
+  }
 });
 
 // Hover a body in the solar view → play its unique tone (once per entry).

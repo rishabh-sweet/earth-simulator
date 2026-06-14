@@ -1,5 +1,9 @@
 import * as THREE from 'three';
 import { SUN, PLANETS, MOON } from './planetData.js';
+import { buildSatellites } from './satellites.js';
+import { buildAsteroidBelt } from './asteroidBelt.js';
+import { buildGalaxies } from './galaxies.js';
+import { buildBlackHole } from './blackHole.js';
 
 // Builds the whole solar system as one THREE.Group and returns:
 //   • root      — add this to the scene
@@ -13,6 +17,7 @@ export function buildSolarSystem(maxAnisotropy = 1) {
   const clickable = [];
   const spinners = []; // { mesh, speed } — things that rotate on their axis
   const orbiters = []; // { pivot, speed } — pivots that swing a body around
+  const updaters = []; // generic per-frame callbacks (satellites, belt, etc.)
 
   const loader = new THREE.TextureLoader();
   const colorTex = (path) => {
@@ -100,6 +105,13 @@ export function buildSolarSystem(maxAnisotropy = 1) {
       orbiters.push({ pivot: moonPivot, speed: 0.5 }); // Moon laps Earth quickly
     }
 
+    // Satellites orbiting Earth (ISS + two comm sats).
+    if (p.key === 'earth') {
+      const sats = buildSatellites(system);
+      clickable.push(...sats.clickable);
+      updaters.push(...sats.updaters);
+    }
+
     // Faint circular orbit line on the flat plane.
     root.add(makeOrbitLine(p.orbitRadius, p.color));
 
@@ -107,9 +119,28 @@ export function buildSolarSystem(maxAnisotropy = 1) {
     orbiters.push({ pivot, speed: 0.28 / Math.sqrt(p.orbitRadius) });
   });
 
+  // ── Asteroid belt (instanced rocks + Ceres, Vesta, Eros) ──────────────────
+  const belt = buildAsteroidBelt();
+  root.add(belt.group);
+  root.add(belt.anchor);
+  clickable.push(...belt.clickable);
+  updaters.push(...belt.updaters);
+
+  // ── Distant galaxies (soft glowing sprites, far in the background) ─────────
+  const galaxies = buildGalaxies();
+  root.add(galaxies.group);
+  clickable.push(...galaxies.clickable);
+
+  // ── Black hole — Sagittarius A*, far from the Sun ─────────────────────────
+  const blackHole = buildBlackHole();
+  root.add(blackHole.group);
+  clickable.push(...blackHole.clickable);
+  updaters.push(...blackHole.updaters);
+
   function update(dt) {
     for (const s of spinners) s.mesh.rotation.y += s.speed * dt;
     for (const o of orbiters) o.pivot.rotation.y += o.speed * dt;
+    for (const u of updaters) u(dt);
   }
 
   return { root, clickable, update };
