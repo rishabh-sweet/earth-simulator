@@ -4,6 +4,23 @@ import { buildSatellites } from './satellites.js';
 import { buildAsteroidBelt } from './asteroidBelt.js';
 import { buildGalaxies } from './galaxies.js';
 import { buildBlackHole } from './blackHole.js';
+import { buildComet } from './comet.js';
+import { buildMeteors } from './meteors.js';
+import { buildDeepSpace } from './deepSpace.js';
+import { createPlanetGlow } from './planetAtmosphere.js';
+
+// Surfaces that benefit from a subtle bump map derived from their own albedo
+// (rocky/terrestrial worlds), and the per-planet atmospheric-glow tints.
+const BUMP = new Set(['mercury', 'venus', 'earth', 'mars']);
+const ATMO = {
+  venus: { c: 0xe8cf9a, i: 0.8, s: 1.15 },
+  earth: { c: 0x6ba6ff, i: 0.9, s: 1.18 },
+  mars: { c: 0xd9785b, i: 0.7, s: 1.16 },
+  jupiter: { c: 0xe0d2ad, i: 0.7, s: 1.08 },
+  saturn: { c: 0xe8dcb0, i: 0.7, s: 1.08 },
+  uranus: { c: 0xa6e4ec, i: 0.85, s: 1.12 },
+  neptune: { c: 0x5a7dff, i: 0.9, s: 1.12 },
+};
 
 // Builds the whole solar system as one THREE.Group and returns:
 //   • root      — add this to the scene
@@ -34,6 +51,9 @@ export function buildSolarSystem(maxAnisotropy = 1, manager) {
     new THREE.MeshBasicMaterial({ map: colorTex('/textures/milky_way.jpg'), side: THREE.BackSide })
   );
   root.add(sky);
+
+  // Coloured star field + soft nebula clouds in the deep background.
+  root.add(buildDeepSpace().group);
 
   // ── Lighting ────────────────────────────────────────────────────────────
   // One bright light at the Sun (no distance falloff so far planets still
@@ -70,15 +90,26 @@ export function buildSolarSystem(maxAnisotropy = 1, manager) {
     tilt.rotation.z = THREE.MathUtils.degToRad(p.axialTilt);
     system.add(tilt);
 
+    const tex = colorTex(p.texture);
+    const matOpts = { map: tex, roughness: 1, metalness: 0 };
+    if (BUMP.has(p.key)) {
+      // reuse the colour map as a cheap bump map → real-looking surface relief
+      matOpts.bumpMap = tex;
+      matOpts.bumpScale = 0.03;
+    }
     const mesh = new THREE.Mesh(
       new THREE.SphereGeometry(p.radius, 64, 64),
-      new THREE.MeshStandardMaterial({ map: colorTex(p.texture), roughness: 1, metalness: 0 })
+      new THREE.MeshStandardMaterial(matOpts)
     );
     mesh.userData.body = p;
     p.object3d = mesh;
     tilt.add(mesh);
     clickable.push(mesh);
     spinners.push({ mesh, speed: p.spinSpeed });
+
+    // Soft atmospheric glow at the limb, for planets that have an atmosphere.
+    const atmo = ATMO[p.key];
+    if (atmo) system.add(createPlanetGlow(p.radius, atmo.c, atmo.i, atmo.s));
 
     // Saturn's rings — flat disc lying in the planet's tilted equator.
     if (p.rings) {
@@ -92,9 +123,10 @@ export function buildSolarSystem(maxAnisotropy = 1, manager) {
     if (p.moon) {
       const moonPivot = new THREE.Group();
       system.add(moonPivot);
+      const moonTex = colorTex(p.moon.texture);
       const moonMesh = new THREE.Mesh(
         new THREE.SphereGeometry(p.moon.radius, 64, 64),
-        new THREE.MeshStandardMaterial({ map: colorTex(p.moon.texture), roughness: 1, metalness: 0 })
+        new THREE.MeshStandardMaterial({ map: moonTex, bumpMap: moonTex, bumpScale: 0.015, roughness: 1, metalness: 0 })
       );
       moonMesh.position.x = p.moon.orbitRadius;
       moonMesh.userData.body = MOON;
@@ -136,6 +168,17 @@ export function buildSolarSystem(maxAnisotropy = 1, manager) {
   root.add(blackHole.group);
   clickable.push(...blackHole.clickable);
   updaters.push(...blackHole.updaters);
+
+  // ── Comet (icy nucleus + tail) on a slow inclined orbit ───────────────────
+  const comet = buildComet();
+  root.add(comet.group);
+  clickable.push(...comet.clickable);
+  updaters.push(...comet.updaters);
+
+  // ── Shooting stars streaking across the deep background ───────────────────
+  const meteors = buildMeteors();
+  root.add(meteors.group);
+  updaters.push(...meteors.updaters);
 
   function update(dt) {
     for (const s of spinners) s.mesh.rotation.y += s.speed * dt;
@@ -190,10 +233,42 @@ function makeRing(rings, loader, maxAnisotropy = 1) {
   const tex = loader.load(rings.texture);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = maxAnisotropy;
-  const mesh = new THREE.Mesh(
-    geo,
-    new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true, depthWrite: false })
-  );
+
+  // A shader so the rings read as semi-transparent bands with a warm-to-cool
+  // colour gradient across the radius, rather than a flat opaque disc.
+  const material = new THREE.ShaderMaterial({
+    uniforms: { ringTex: { value: tex } },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv;
+      #include <common>
+      #include <logdepthbuf_pars_vertex>
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        #include <logdepthbuf_vertex>
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform sampler2D ringTex;
+      varying vec2 vUv;
+      #include <logdepthbuf_pars_fragment>
+      void main() {
+        #include <logdepthbuf_fragment>
+        vec4 t = texture2D(ringTex, vUv);            // vUv.x runs inner→outer
+        vec3 inner = vec3(0.87, 0.79, 0.62);         // warm sandy
+        vec3 outer = vec3(0.74, 0.76, 0.80);         // cool pale grey
+        vec3 col = t.rgb * mix(inner, outer, vUv.x) * 1.15;
+        float alpha = t.a * 0.9;                      // semi-transparent
+        if (alpha < 0.01) discard;
+        gl_FragColor = vec4(col, alpha);
+      }
+    `,
+    side: THREE.DoubleSide,
+    transparent: true,
+    depthWrite: false,
+  });
+
+  const mesh = new THREE.Mesh(geo, material);
   mesh.rotation.x = -Math.PI / 2; // lay flat into the planet's equatorial plane
   return mesh;
 }
