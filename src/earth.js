@@ -72,9 +72,9 @@ const fragmentShader = /* glsl */ `
 // Build the Earth: a sphere driven by the custom day/night shader above.
 // `maxAnisotropy` (from the renderer) keeps the textures sharp at grazing
 // angles near the horizon instead of looking blocky or seamed.
-export function createEarth(maxAnisotropy = 1) {
+export function createEarth(maxAnisotropy = 1, manager) {
   const geometry = new THREE.SphereGeometry(1, 64, 64);
-  const loader = new THREE.TextureLoader();
+  const loader = new THREE.TextureLoader(manager);
 
   // Daytime "Blue Marble" photo. It's a color image, so decode it from sRGB.
   const dayTexture = loader.load('/textures/earth_daymap.jpg');

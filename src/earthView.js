@@ -36,7 +36,7 @@ function framedCameraPosition(camera) {
 // The close-up Earth — exactly the day/night globe from before, now packaged
 // as a self-contained "view" (its own scene, camera and controls) so the app
 // can switch between this and the solar-system view.
-export function createEarthView(canvas, maxAnisotropy = 1) {
+export function createEarthView(canvas, maxAnisotropy = 1, manager) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
 
@@ -50,8 +50,8 @@ export function createEarthView(canvas, maxAnisotropy = 1) {
   controls.maxDistance = 12;   // lets you pull back to the "leave Earth" threshold
   controls.enablePan = false;
 
-  const earth = createEarth(maxAnisotropy);
-  const clouds = createClouds(maxAnisotropy);
+  const earth = createEarth(maxAnisotropy, manager);
+  const clouds = createClouds(maxAnisotropy, manager);
   const atmosphere = createAtmosphere();
   scene.add(earth);
   scene.add(clouds);

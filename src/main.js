@@ -15,16 +15,21 @@ const renderer = new THREE.WebGLRenderer({
   logarithmicDepthBuffer: true,
   precision: 'highp',         // full float precision in shaders (avoids cracking/banding)
 });
-renderer.setPixelRatio(window.devicePixelRatio);
+// Cap the pixel ratio at 2 — on high-DPI phones a ratio of 3 triples the pixels
+// to shade for no visible gain, so this keeps mobile smooth.
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 // Sharpest texture filtering the GPU supports — shared by both views so the
 // planet surfaces stay crisp at grazing angles instead of blocky/seamed.
 const maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
 
+// Tracks texture loading so the loading screen can show real progress.
+const loadingManager = new THREE.LoadingManager();
+
 // ── The two views ────────────────────────────────────────────────────────────
-const earthView = createEarthView(canvas, maxAnisotropy);
-const solarView = createSolarView(canvas, maxAnisotropy);
+const earthView = createEarthView(canvas, maxAnisotropy, loadingManager);
+const solarView = createSolarView(canvas, maxAnisotropy, loadingManager);
 const infoPanel = createInfoPanel();
 
 // ── Overlay DOM ──────────────────────────────────────────────────────────────
@@ -56,6 +61,48 @@ btnSound.addEventListener('click', () => {
   btnSound.classList.toggle('muted', !on);
   btnSound.setAttribute('aria-pressed', String(on));
 });
+
+// ── Loading screen ─────────────────────────────────────────────────────────
+// Hold the globe behind a full-screen loader until every texture is in, then
+// fade through. `ready` gates all interaction until that's done.
+const loaderEl = document.getElementById('loader');
+const loaderFill = document.getElementById('loader-fill');
+const toastEl = document.getElementById('welcome-toast');
+const loadStart = performance.now();
+let ready = false;
+
+earthView.controls.enabled = false; // no interaction until loaded
+
+loadingManager.onProgress = (url, loaded, total) => {
+  loaderFill.style.transform = `scaleX(${total ? loaded / total : 1})`;
+};
+loadingManager.onLoad = () => {
+  // keep the loader up for a brief floor so it never just flashes
+  const elapsed = performance.now() - loadStart;
+  setTimeout(revealGlobe, Math.max(0, 750 - elapsed));
+};
+setTimeout(revealGlobe, 6000); // safety net if loading ever stalls
+
+function revealGlobe() {
+  if (ready) return;
+  ready = true;
+  loaderFill.style.transform = 'scaleX(1)';
+  loaderEl.classList.add('done');
+  earthView.controls.enabled = true;
+  showWelcomeBack();
+}
+
+// Returning visitor (name saved by the landing page) → a gentle toast.
+function showWelcomeBack() {
+  let user = null;
+  try { user = JSON.parse(localStorage.getItem('wanderglobe_user')); } catch (e) {}
+  if (!user || !user.name) return;
+  toastEl.textContent = `Welcome back, ${user.name}`;
+  setTimeout(() => {
+    toastEl.classList.add('show');
+    setTimeout(() => toastEl.classList.remove('show'), 3000);
+  }, 500);
+}
 
 // ── App state ────────────────────────────────────────────────────────────────
 let mode = 'earth';        // 'earth' (close-up) or 'solar'
@@ -245,7 +292,7 @@ canvas.addEventListener('pointerdown', (e) => {
 window.addEventListener('pointerup', (e) => {
   const d = pointerDown;
   pointerDown = null;
-  if (!d || mode !== 'solar' || busy()) return;
+  if (!d || !ready || mode !== 'solar' || busy()) return;
   const moved = Math.hypot(e.clientX - d.x, e.clientY - d.y);
   if (moved > 8 || performance.now() - d.t > 500) return; // it was a drag
   const hit = pickHit(e.clientX, e.clientY);
@@ -266,7 +313,7 @@ let hoveredKey = null;
 let lastHoverCheck = 0;
 window.addEventListener('pointermove', (e) => {
   if (e.pointerType === 'touch') return;          // touch has no hover
-  if (mode !== 'solar' || busy()) { hoveredKey = null; return; }
+  if (!ready || mode !== 'solar' || busy()) { hoveredKey = null; return; }
   const now = performance.now();
   if (now - lastHoverCheck < 60) return;          // throttle the raycast
   lastHoverCheck = now;
@@ -281,7 +328,7 @@ window.addEventListener('pointermove', (e) => {
 
 // ── Resize ───────────────────────────────────────────────────────────────────
 window.addEventListener('resize', () => {
-  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
   earthView.resize();
   solarView.resize();
@@ -301,7 +348,7 @@ function animate(now) {
     if (!busy()) earthView.controls.update();
     renderer.render(earthView.scene, earthView.camera);
     // Pull back far enough and we leave for the solar system.
-    if (!busy() && earthView.getDistance() > EARTH_EXIT_DIST) goToSolar();
+    if (ready && !busy() && earthView.getDistance() > EARTH_EXIT_DIST) goToSolar();
   } else {
     solarView.update(dt);
     if (!busy()) solarView.controls.update();

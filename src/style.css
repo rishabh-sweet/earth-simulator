@@ -5,16 +5,22 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  overscroll-behavior: none; /* no rubber-band page scroll on mobile */
+}
+
 body {
   background: #000;
   overflow: hidden;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Rajdhani', 'Helvetica Neue', Arial, sans-serif;
 }
 
 #canvas {
   display: block;
   width: 100vw;
   height: 100vh;
+  touch-action: none; /* one finger rotate / two finger pinch — never scroll the page */
 }
 
 /* ── Black fade layer used between views ─────────────────────────────────── */
@@ -194,4 +200,123 @@ body {
   font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+/* ── Loading screen ──────────────────────────────────────────────────────── */
+#loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  background: radial-gradient(circle at 50% 42%, #0a1024 0%, #05070d 70%);
+  transition: opacity 0.7s ease;
+}
+#loader.done {
+  opacity: 0;
+  pointer-events: none;
+}
+.loader-logo {
+  width: 88px;
+  height: 88px;
+  filter: drop-shadow(0 0 18px rgba(91, 140, 255, 0.5));
+  animation: loader-pulse 2.2s ease-in-out infinite;
+}
+.loader-word {
+  font-size: 15px;
+  font-weight: 300;
+  letter-spacing: 0.42em;
+  padding-left: 0.42em;
+  text-transform: uppercase;
+  color: #cdd8f5;
+}
+.loader-bar {
+  width: 200px;
+  max-width: 60vw;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+#loader-fill {
+  height: 100%;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: linear-gradient(90deg, #3f6fe8, #8cb4ff);
+  transition: transform 0.35s ease;
+}
+@keyframes loader-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+/* ── Welcome-back toast (bottom-centre) ──────────────────────────────────── */
+#welcome-toast {
+  position: fixed;
+  bottom: 74px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  z-index: 30;
+  padding: 11px 22px;
+  border-radius: 999px;
+  background: rgba(10, 16, 32, 0.7);
+  border: 1px solid rgba(127, 184, 255, 0.3);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: #eef3ff;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+#welcome-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Typography: thin, uppercase, letter-spaced across the globe UI ──────── */
+.ui-btn {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 500;
+}
+.ui-icon { font-weight: 500; }
+#brand span {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 400;
+}
+
+/* ── Responsive (phones) ─────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  #info-name {
+    font-size: 22px;
+    letter-spacing: 0.18em;
+    padding-left: 0.18em;
+    top: 7%;
+  }
+  #info-callouts {
+    right: 4%;
+    width: clamp(148px, 42vw, 200px);
+    gap: 16px;
+  }
+  .ui-btn {
+    font-size: 12px;
+    padding: 9px 13px;
+  }
+  #btn-back { top: 64px; }
+  #brand span { display: none; } /* logo only, to save room */
+  #hint {
+    font-size: 10.5px;
+    padding: 0 14px;
+    width: 100%;
+  }
 }

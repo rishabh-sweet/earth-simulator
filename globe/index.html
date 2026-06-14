@@ -4,11 +4,39 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wanderglobe — Your Globe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
     <!-- Three.js renders into this canvas -->
     <canvas id="canvas"></canvas>
+
+    <!-- Full-screen loading screen: logo + thin progress bar, fades out when ready -->
+    <div id="loader">
+      <svg class="loader-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="wgLoad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#f2f6ff" />
+            <stop offset="1" stop-color="#7aa7ff" />
+          </linearGradient>
+        </defs>
+        <circle cx="24" cy="29" r="13" stroke="url(#wgLoad)" stroke-width="1.7" />
+        <ellipse cx="24" cy="29" rx="5.6" ry="13" stroke="url(#wgLoad)" stroke-width="1.1" opacity="0.85" />
+        <path d="M11.7 25.2h24.6M12.1 33h23.8" stroke="url(#wgLoad)" stroke-width="1.1" opacity="0.85" />
+        <path d="M24 4.6a5.2 5.2 0 0 1 5.2 5.2c0 3.9-3.3 5.4-5.2 8.6-1.9-3.2-5.2-4.7-5.2-8.6A5.2 5.2 0 0 1 24 4.6z" stroke="url(#wgLoad)" stroke-width="1.7" />
+        <circle cx="24" cy="9.8" r="1.9" fill="url(#wgLoad)" />
+      </svg>
+      <div class="loader-word">Wanderglobe</div>
+      <div class="loader-bar"><div id="loader-fill"></div></div>
+    </div>
+
+    <!-- Returning-visitor toast -->
+    <div id="welcome-toast"></div>
 
     <!-- Wanderglobe brand, linking back to the landing page -->
     <a id="brand" href="/" aria-label="Wanderglobe — home">

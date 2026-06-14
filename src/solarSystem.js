@@ -12,14 +12,14 @@ import { buildBlackHole } from './blackHole.js';
 //
 // Each body object also gets a `.object3d` reference so other code can ask
 // where it currently is in the world (for camera flights and labels).
-export function buildSolarSystem(maxAnisotropy = 1) {
+export function buildSolarSystem(maxAnisotropy = 1, manager) {
   const root = new THREE.Group();
   const clickable = [];
   const spinners = []; // { mesh, speed } — things that rotate on their axis
   const orbiters = []; // { pivot, speed } — pivots that swing a body around
   const updaters = []; // generic per-frame callbacks (satellites, belt, etc.)
 
-  const loader = new THREE.TextureLoader();
+  const loader = new THREE.TextureLoader(manager);
   const colorTex = (path) => {
     const t = loader.load(path);
     t.colorSpace = THREE.SRGBColorSpace; // these are color photos

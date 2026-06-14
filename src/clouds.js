@@ -52,10 +52,10 @@ const fragmentShader = /* glsl */ `
 // A thin shell ~1% larger than the Earth, wrapped in a semi-transparent cloud
 // map. It does NOT write depth (so it never hides the stars), but it DOES test
 // depth (so the solid Earth hides the clouds on its far side).
-export function createClouds(maxAnisotropy = 1) {
+export function createClouds(maxAnisotropy = 1, manager) {
   const geometry = new THREE.SphereGeometry(1.01, 64, 64);
 
-  const loader = new THREE.TextureLoader();
+  const loader = new THREE.TextureLoader(manager);
   const cloudTexture = loader.load('/textures/earthcloudmap.jpg');
   cloudTexture.colorSpace = THREE.LinearSRGBColorSpace; // a data mask, not a color photo
   cloudTexture.anisotropy = maxAnisotropy;
