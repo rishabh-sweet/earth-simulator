@@ -4,10 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wanderglobe — Your Globe</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/src/style.css" />
@@ -20,16 +26,18 @@
     <div id="loader">
       <svg class="loader-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true">
         <defs>
-          <linearGradient id="wgLoad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#f2f6ff" />
-            <stop offset="1" stop-color="#7aa7ff" />
+          <linearGradient id="wgLoad" x1="6" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#4fc3f7" />
+            <stop offset="0.55" stop-color="#7a9bff" />
+            <stop offset="1" stop-color="#ff6b8a" />
           </linearGradient>
         </defs>
-        <circle cx="24" cy="29" r="13" stroke="url(#wgLoad)" stroke-width="1.7" />
-        <ellipse cx="24" cy="29" rx="5.6" ry="13" stroke="url(#wgLoad)" stroke-width="1.1" opacity="0.85" />
-        <path d="M11.7 25.2h24.6M12.1 33h23.8" stroke="url(#wgLoad)" stroke-width="1.1" opacity="0.85" />
-        <path d="M24 4.6a5.2 5.2 0 0 1 5.2 5.2c0 3.9-3.3 5.4-5.2 8.6-1.9-3.2-5.2-4.7-5.2-8.6A5.2 5.2 0 0 1 24 4.6z" stroke="url(#wgLoad)" stroke-width="1.7" />
-        <circle cx="24" cy="9.8" r="1.9" fill="url(#wgLoad)" />
+        <circle cx="24" cy="30" r="12" stroke="url(#wgLoad)" stroke-width="1.6" />
+        <ellipse cx="24" cy="30" rx="5" ry="12" stroke="url(#wgLoad)" stroke-width="1.1" opacity="0.9" />
+        <ellipse cx="24" cy="30" rx="12" ry="4.4" stroke="url(#wgLoad)" stroke-width="1.1" opacity="0.9" />
+        <path d="M13.4 24.7c3.2 1 18 1 21.2 0M13.4 35.3c3.2-1 18-1 21.2 0" stroke="url(#wgLoad)" stroke-width="1" opacity="0.6" />
+        <path d="M24 3.4c-4.3 0-7.7 3.4-7.7 7.6 0 4.3 7.7 7.4 7.7 7.4s7.7-3.1 7.7-7.4c0-4.2-3.4-7.6-7.7-7.6z" fill="url(#wgLoad)" />
+        <path d="M24 7.9l0.9 2.2 2.2 0.9-2.2 0.9-0.9 2.2-0.9-2.2-2.2-0.9 2.2-0.9z" fill="#fff" opacity="0.95" />
       </svg>
       <div class="loader-word">Wanderglobe</div>
       <div class="loader-bar"><div id="loader-fill"></div></div>
@@ -42,16 +50,18 @@
     <a id="brand" href="/" aria-label="Wanderglobe — home">
       <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
         <defs>
-          <linearGradient id="wgGlobe" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#f2f6ff" />
-            <stop offset="1" stop-color="#7aa7ff" />
+          <linearGradient id="wgGlobe" x1="6" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#4fc3f7" />
+            <stop offset="0.55" stop-color="#7a9bff" />
+            <stop offset="1" stop-color="#ff6b8a" />
           </linearGradient>
         </defs>
-        <circle cx="24" cy="29" r="13" stroke="url(#wgGlobe)" stroke-width="1.7" />
-        <ellipse cx="24" cy="29" rx="5.6" ry="13" stroke="url(#wgGlobe)" stroke-width="1.1" opacity="0.85" />
-        <path d="M11.7 25.2h24.6M12.1 33h23.8" stroke="url(#wgGlobe)" stroke-width="1.1" opacity="0.85" />
-        <path d="M24 4.6a5.2 5.2 0 0 1 5.2 5.2c0 3.9-3.3 5.4-5.2 8.6-1.9-3.2-5.2-4.7-5.2-8.6A5.2 5.2 0 0 1 24 4.6z" stroke="url(#wgGlobe)" stroke-width="1.7" />
-        <circle cx="24" cy="9.8" r="1.9" fill="url(#wgGlobe)" />
+        <circle cx="24" cy="30" r="12" stroke="url(#wgGlobe)" stroke-width="1.6" />
+        <ellipse cx="24" cy="30" rx="5" ry="12" stroke="url(#wgGlobe)" stroke-width="1.1" opacity="0.9" />
+        <ellipse cx="24" cy="30" rx="12" ry="4.4" stroke="url(#wgGlobe)" stroke-width="1.1" opacity="0.9" />
+        <path d="M13.4 24.7c3.2 1 18 1 21.2 0M13.4 35.3c3.2-1 18-1 21.2 0" stroke="url(#wgGlobe)" stroke-width="1" opacity="0.6" />
+        <path d="M24 3.4c-4.3 0-7.7 3.4-7.7 7.6 0 4.3 7.7 7.4 7.7 7.4s7.7-3.1 7.7-7.4c0-4.2-3.4-7.6-7.7-7.6z" fill="url(#wgGlobe)" />
+        <path d="M24 7.9l0.9 2.2 2.2 0.9-2.2 0.9-0.9 2.2-0.9-2.2-2.2-0.9 2.2-0.9z" fill="#fff" opacity="0.95" />
       </svg>
       <span>Wanderglobe</span>
     </a>
@@ -70,6 +80,74 @@
     <button id="btn-back" class="ui-btn">← Back</button>
     <button id="btn-earth" class="ui-btn">⌂ Earth view</button>
     <div id="hint"></div>
+
+    <!-- Pin-mode toggle (top-right; only in the Earth close-up view) -->
+    <button id="btn-pin" class="ui-icon pin-toggle" aria-label="Toggle pin mode" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z" />
+        <circle cx="12" cy="10" r="2.6" />
+      </svg>
+    </button>
+
+    <!-- Live pin tally (bottom-left; Earth view) -->
+    <div id="pin-stats"></div>
+
+    <!-- Add / Edit pin sheet (slides in from the right) -->
+    <div id="pin-panel" class="pin-sheet">
+      <div class="pin-sheet-inner">
+        <button id="pin-panel-close" class="sheet-x" aria-label="Close">×</button>
+        <h2 id="pin-panel-title">Add Pin</h2>
+        <div id="pin-panel-coords" class="pin-coords"></div>
+
+        <label for="pin-name">Place</label>
+        <input id="pin-name" type="text" maxlength="60" placeholder="Place name" autocomplete="off" />
+
+        <label for="pin-note">Memory <span class="muted">(<span id="pin-note-count">0</span>/100)</span></label>
+        <input id="pin-note" type="text" maxlength="100" placeholder="One line about this place" autocomplete="off" />
+
+        <label>Type</label>
+        <div class="pin-type-toggle">
+          <button type="button" id="pin-type-visited" class="type-opt active" data-type="visited">● Visited</button>
+          <button type="button" id="pin-type-wishlist" class="type-opt" data-type="wishlist">○ Wishlist</button>
+        </div>
+
+        <label>Photo</label>
+        <div class="pin-photo">
+          <input id="pin-photo-input" type="file" accept="image/*" hidden />
+          <button type="button" id="pin-photo-btn" class="photo-btn">Choose photo…</button>
+          <div id="pin-photo-preview" class="photo-preview"></div>
+        </div>
+
+        <div id="pin-status" class="pin-status"></div>
+
+        <div class="pin-actions">
+          <button type="button" id="pin-save" class="btn-primary">Save Pin</button>
+          <button type="button" id="pin-cancel" class="btn-ghost">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pin info card (slides in from the right) -->
+    <div id="pin-card" class="pin-sheet">
+      <div class="pin-sheet-inner">
+        <button id="pin-card-close" class="sheet-x" aria-label="Close">×</button>
+        <div id="pin-card-badge" class="pin-badge"></div>
+        <h2 id="pin-card-name"></h2>
+        <div id="pin-card-photo" class="card-photo"></div>
+        <div id="pin-card-note" class="card-note"></div>
+        <div id="pin-card-coords" class="pin-coords"></div>
+        <div id="pin-card-date" class="pin-date"></div>
+        <div class="pin-actions">
+          <button type="button" id="pin-edit" class="btn-ghost">Edit</button>
+          <button type="button" id="pin-delete" class="btn-danger">Delete</button>
+        </div>
+        <div id="pin-delete-confirm" class="delete-confirm">
+          <span>Delete this pin?</span>
+          <button type="button" id="pin-delete-yes" class="btn-danger-sm">Delete</button>
+          <button type="button" id="pin-delete-no" class="btn-ghost-sm">Keep</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Sound toggle (procedural audio; bottom-right) -->
     <button id="btn-sound" class="ui-icon" aria-label="Toggle sound" aria-pressed="true">

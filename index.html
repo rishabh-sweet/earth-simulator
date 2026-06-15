@@ -5,57 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Wanderglobe — Pin the world. Share the journey. A beautiful 3D globe for your travels."
+      content="Wanderglobe — drop pins on a living 3D globe, tell your story, and share your world. Every place you've been. Every place you'll go."
     />
-    <title>Wanderglobe — Pin the world. Share the journey.</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <title>Wanderglobe — Every place you've been. Every place you'll go.</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <!-- Clash Display (headlines) + Satoshi (body) from Fontshare -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&f[]=satoshi@400,500,700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/landing/landing.css" />
   </head>
   <body>
+    <!-- Animated deep-gradient backdrop + starfield (never pure black) -->
+    <div class="bg-animated" aria-hidden="true"></div>
     <canvas id="stars" aria-hidden="true"></canvas>
 
-    <div class="ambient" aria-hidden="true">
-      <div class="spotlight"></div>
-      <div class="mesh mesh-a"></div>
-      <div class="mesh mesh-b"></div>
-      <div class="mesh mesh-c"></div>
-      <div class="noise"></div>
-    </div>
-
+    <!-- ── Sticky navigation ──────────────────────────────────────────────── -->
     <header class="site-header" id="nav">
       <nav class="nav">
-        <a class="nav-brand" href="#hero">
-          <!-- Wanderglobe mark: thin-stroke globe with a location pin planted at its north pole -->
-          <svg class="nav-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <a class="nav-brand" href="#hero" aria-label="Wanderglobe — home">
+          <svg class="wg-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true">
             <defs>
-              <linearGradient id="wgNav" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="#f2f6ff" />
-                <stop offset="1" stop-color="#7aa7ff" />
+              <linearGradient id="wgNav" x1="6" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#4fc3f7" />
+                <stop offset="0.55" stop-color="#7a9bff" />
+                <stop offset="1" stop-color="#ff6b8a" />
               </linearGradient>
             </defs>
-            <circle cx="24" cy="29" r="13" stroke="url(#wgNav)" stroke-width="1.7" />
-            <ellipse cx="24" cy="29" rx="5.6" ry="13" stroke="url(#wgNav)" stroke-width="1.1" opacity="0.85" />
-            <path d="M11.7 25.2h24.6M12.1 33h23.8" stroke="url(#wgNav)" stroke-width="1.1" opacity="0.85" />
-            <path d="M24 4.6a5.2 5.2 0 0 1 5.2 5.2c0 3.9-3.3 5.4-5.2 8.6-1.9-3.2-5.2-4.7-5.2-8.6A5.2 5.2 0 0 1 24 4.6z" stroke="url(#wgNav)" stroke-width="1.7" />
-            <circle cx="24" cy="9.8" r="1.9" fill="url(#wgNav)" />
+            <circle cx="24" cy="30" r="12" stroke="url(#wgNav)" stroke-width="1.6" />
+            <ellipse cx="24" cy="30" rx="5" ry="12" stroke="url(#wgNav)" stroke-width="1.1" opacity="0.9" />
+            <ellipse cx="24" cy="30" rx="12" ry="4.4" stroke="url(#wgNav)" stroke-width="1.1" opacity="0.9" />
+            <path d="M13.4 24.7c3.2 1 18 1 21.2 0M13.4 35.3c3.2-1 18-1 21.2 0" stroke="url(#wgNav)" stroke-width="1" opacity="0.6" />
+            <path d="M24 3.4c-4.3 0-7.7 3.4-7.7 7.6 0 4.3 7.7 7.4 7.7 7.4s7.7-3.1 7.7-7.4c0-4.2-3.4-7.6-7.7-7.6z" fill="url(#wgNav)" />
+            <path d="M24 7.9l0.9 2.2 2.2 0.9-2.2 0.9-0.9 2.2-0.9-2.2-2.2-0.9 2.2-0.9z" fill="#fff" opacity="0.95" />
           </svg>
           <span class="brand-word">Wanderglobe</span>
         </a>
 
         <div class="nav-center">
           <a href="#features">Features</a>
-          <a href="#how">How it works</a>
-          <a href="#why">Why us</a>
+          <a href="#how">How it Works</a>
+          <a href="#testimonials">Testimonials</a>
         </div>
 
         <div class="nav-actions">
-          <a class="nav-link js-open-login" href="#cta">Sign in</a>
-          <a class="nav-cta js-open-login" href="#cta">Get started</a>
+          <a class="nav-link js-open-login" href="#cta">Sign In</a>
+          <a class="nav-cta js-open-login" href="#cta">
+            <span class="cta-label">Start Free</span>
+            <span class="cta-arrow">→</span>
+          </a>
         </div>
 
         <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false">
@@ -65,258 +65,322 @@
       </nav>
     </header>
 
+    <!-- Mobile full-screen overlay menu -->
     <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
       <a href="#features">Features</a>
-      <a href="#how">How it works</a>
-      <a href="#why">Why us</a>
-      <a href="#cta" class="mobile-cta js-open-login">Get started</a>
+      <a href="#how">How it Works</a>
+      <a href="#testimonials">Testimonials</a>
+      <a href="#cta" class="mobile-cta js-open-login"><span class="cta-label">Start Free →</span></a>
     </div>
 
     <main>
-      <!-- Hero -->
+      <!-- ── Section 1 — Hero ───────────────────────────────────────────────── -->
       <section class="hero" id="hero">
-        <div class="hero-content">
+        <div class="hero-left">
           <div class="hero-badge reveal">
-            <span class="badge-dot"></span>
-            Pin the world. Share the journey.
+            <span class="badge-spark">✦</span> Your personal travel universe
           </div>
 
           <h1 class="hero-title">
-            <span class="line reveal"><span class="word">Your</span> <span class="word">world.</span></span>
-            <span class="line reveal" data-delay="80"><span class="word shimmer">Pinned.</span></span>
+            <span class="line reveal"><span class="word">Every</span> <span class="word">place</span> <span class="word">you've</span> <span class="word">been.</span></span>
+            <span class="line line-accent reveal" data-delay="80"><span class="word">Every</span> <span class="word">place</span> <span class="word">you'll</span> <span class="word">go.</span></span>
           </h1>
 
           <p class="hero-lead reveal" data-delay="160">
-            Drop pins on every place you've been, dream of going, and share your
-            story on a stunning 3D Earth — one link, infinite wanderlust.
+            Drop pins on a living, breathing globe. Tell your story.
+            Share your world with the people who matter.
           </p>
 
           <div class="hero-actions reveal" data-delay="240">
-            <button class="btn btn-glow js-open-login" id="hero-cta" type="button">
-              <span class="cta-label">Explore the Globe</span>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+            <button class="btn btn-primary js-open-login" id="hero-cta" type="button">
+              <span class="cta-label">Start for free</span>
+              <span class="cta-arrow">→</span>
             </button>
-            <a class="btn btn-secondary" href="#how">See how it works</a>
+            <button class="btn btn-glass js-open-login" type="button">
+              <svg class="play-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M5 3.5l8 4.5-8 4.5z" fill="currentColor" />
+              </svg>
+              Watch the demo
+            </button>
           </div>
 
-          <p class="hero-footnote reveal" data-delay="320">
-            Free to explore · No credit card required
+          <p class="hero-social reveal" data-delay="320">
+            Join <strong>2,400+</strong> explorers already pinning their world 🌍
           </p>
         </div>
 
-        <div class="hero-stage reveal" data-delay="200" id="hero-stage">
-          <div class="stage-glow"></div>
-          <div class="stage-ring ring-outer"></div>
-          <div class="stage-ring ring-mid"></div>
-          <div class="stage-ring ring-inner"></div>
+        <div class="hero-right reveal" data-delay="200" id="hero-stage">
+          <div class="globe-underglow" aria-hidden="true"></div>
+          <canvas id="mini-globe-canvas" aria-hidden="true"></canvas>
+        </div>
+      </section>
 
-          <div class="stage-globe">
-            <div class="globe-body"></div>
-            <div class="globe-atmosphere"></div>
-            <div class="globe-highlight"></div>
-            <div class="arc arc-1"></div>
-            <div class="arc arc-2"></div>
-            <div class="arc arc-3"></div>
-            <div class="stage-pin pin-a"><span>Tokyo</span></div>
-            <div class="stage-pin pin-b"><span>Paris</span></div>
-            <div class="stage-pin pin-c"><span>NYC</span></div>
+      <!-- ── Section 2 — Stats bar ──────────────────────────────────────────── -->
+      <section class="stats-bar reveal" id="stats">
+        <div class="stats-inner">
+          <div class="stat">
+            <span class="stat-num" data-count="2400" data-suffix="+">0</span>
+            <span class="stat-label">Explorers</span>
           </div>
-
-          <div class="float-card float-card-a">
-            <span class="float-label">Pins placed</span>
-            <span class="float-value">128</span>
+          <span class="stat-dot"></span>
+          <div class="stat">
+            <span class="stat-num" data-count="180" data-suffix="+">0</span>
+            <span class="stat-label">Countries Pinned</span>
           </div>
-          <div class="float-card float-card-b">
-            <span class="float-label">Countries</span>
-            <span class="float-value">34</span>
+          <span class="stat-dot"></span>
+          <div class="stat">
+            <span class="stat-num" data-count="47000" data-suffix="+">0</span>
+            <span class="stat-label">Memories Saved</span>
+          </div>
+          <span class="stat-dot"></span>
+          <div class="stat">
+            <span class="stat-num" data-count="4.9" data-decimals="1" data-suffix="★">0</span>
+            <span class="stat-label">Rating</span>
           </div>
         </div>
       </section>
 
-      <div class="section-divider" aria-hidden="true"></div>
+      <!-- ── Section 3 — City ticker (two opposite rows) ────────────────────── -->
+      <section class="ticker-section" aria-hidden="true">
+        <div class="ticker-row">
+          <div class="ticker-track ticker-left">
+            <div class="ticker-set">
+              <span class="city-pill" style="--accent:#4fc3f7">📍 Tokyo</span>
+              <span class="city-pill" style="--accent:#00e5cc">✈️ Bali</span>
+              <span class="city-pill" style="--accent:#ffd700">🏛️ Rome</span>
+              <span class="city-pill" style="--accent:#4fc3f7">🌊 Maldives</span>
+              <span class="city-pill" style="--accent:#ff6b8a">🗼 Paris</span>
+              <span class="city-pill" style="--accent:#00e5cc">🏔️ Patagonia</span>
+              <span class="city-pill" style="--accent:#ffd700">🌆 New York</span>
+              <span class="city-pill" style="--accent:#ff6b8a">🏯 Kyoto</span>
+            </div>
+            <div class="ticker-set" aria-hidden="true">
+              <span class="city-pill" style="--accent:#4fc3f7">📍 Tokyo</span>
+              <span class="city-pill" style="--accent:#00e5cc">✈️ Bali</span>
+              <span class="city-pill" style="--accent:#ffd700">🏛️ Rome</span>
+              <span class="city-pill" style="--accent:#4fc3f7">🌊 Maldives</span>
+              <span class="city-pill" style="--accent:#ff6b8a">🗼 Paris</span>
+              <span class="city-pill" style="--accent:#00e5cc">🏔️ Patagonia</span>
+              <span class="city-pill" style="--accent:#ffd700">🌆 New York</span>
+              <span class="city-pill" style="--accent:#ff6b8a">🏯 Kyoto</span>
+            </div>
+          </div>
+        </div>
+        <div class="ticker-row">
+          <div class="ticker-track ticker-right">
+            <div class="ticker-set">
+              <span class="city-pill" style="--accent:#ffa500">🌅 Santorini</span>
+              <span class="city-pill" style="--accent:#ff6b8a">🎭 Barcelona</span>
+              <span class="city-pill" style="--accent:#ffd700">🦁 Nairobi</span>
+              <span class="city-pill" style="--accent:#4fc3f7">🏜️ Dubai</span>
+              <span class="city-pill" style="--accent:#00e5cc">🌸 Seoul</span>
+              <span class="city-pill" style="--accent:#ff6b8a">🎪 Istanbul</span>
+              <span class="city-pill" style="--accent:#4fc3f7">🗽 Chicago</span>
+              <span class="city-pill" style="--accent:#00e5cc">🌴 Phuket</span>
+            </div>
+            <div class="ticker-set" aria-hidden="true">
+              <span class="city-pill" style="--accent:#ffa500">🌅 Santorini</span>
+              <span class="city-pill" style="--accent:#ff6b8a">🎭 Barcelona</span>
+              <span class="city-pill" style="--accent:#ffd700">🦁 Nairobi</span>
+              <span class="city-pill" style="--accent:#4fc3f7">🏜️ Dubai</span>
+              <span class="city-pill" style="--accent:#00e5cc">🌸 Seoul</span>
+              <span class="city-pill" style="--accent:#ff6b8a">🎪 Istanbul</span>
+              <span class="city-pill" style="--accent:#4fc3f7">🗽 Chicago</span>
+              <span class="city-pill" style="--accent:#00e5cc">🌴 Phuket</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <!-- Features -->
+      <!-- ── Section 4 — Features ───────────────────────────────────────────── -->
       <section class="section features" id="features">
         <div class="section-head reveal">
-          <p class="label">Features</p>
-          <h2>Everything you need<br />to map your world</h2>
-          <p class="section-lead">
-            A travel journal that feels as expansive as the planet itself.
-          </p>
+          <p class="eyebrow">How it works</p>
+          <h2>Three taps to your<br />whole world</h2>
         </div>
 
-        <div class="bento">
-          <article class="bento-card bento-featured reveal">
-            <div class="bento-glow"></div>
-            <div class="bento-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="12" cy="12" r="9" />
-                <ellipse cx="12" cy="12" rx="4" ry="9" />
-                <path d="M3 9h18M3 15h18" />
-              </svg>
+        <div class="feature-cards">
+          <article class="feature-card border-blue reveal">
+            <div class="feat-icon icon-drop" aria-hidden="true">
+              <span class="ic-globe"></span>
+              <span class="ic-pin"></span>
             </div>
-            <h3>Explore in cinematic 3D</h3>
-            <p>
-              Spin a photorealistic Earth with day-night cycles, atmosphere glow,
-              and the full solar system at your fingertips.
-            </p>
-            <div class="bento-visual" aria-hidden="true">
-              <div class="mini-orbit"><div class="mini-planet"></div></div>
-            </div>
+            <h3>Drop a Pin, Anywhere</h3>
+            <p>Spin the globe, click your spot. Every country, every city, every hidden gem — yours to claim in one tap.</p>
+            <ul class="feat-list">
+              <li>Visited &amp; Wishlist modes</li>
+              <li>Auto location name</li>
+              <li>Add photos &amp; memories</li>
+            </ul>
           </article>
 
-          <article class="bento-card reveal" data-delay="60">
-            <div class="bento-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M12 2a8 8 0 0 1 8 8c0 6-5 10.5-8 16.5C9 20.5 4 16 4 10a8 8 0 0 1 8-8z" />
-                <circle cx="12" cy="10" r="2.5" />
-              </svg>
+          <article class="feature-card border-coral reveal" data-delay="120">
+            <div class="feat-icon icon-photo" aria-hidden="true">
+              <span class="ic-frame"></span>
+              <span class="ic-shot"></span>
             </div>
-            <h3>Pin your journey</h3>
-            <p>Mark every city and coast. Your pins wrap around a globe that spins with your story.</p>
+            <h3>Tell Your Story</h3>
+            <p>Every pin holds a memory. Add a photo, write what made it special, and build a travel journal that lives on the globe.</p>
+            <ul class="feat-list">
+              <li>Photo uploads</li>
+              <li>Personal notes</li>
+              <li>Date &amp; coordinates saved</li>
+            </ul>
           </article>
 
-          <article class="bento-card reveal" data-delay="120">
-            <div class="bento-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M4 15a8 8 0 0 1 16-2.5" />
-                <path d="M8 19h8" />
-              </svg>
+          <article class="feature-card border-gold reveal" data-delay="240">
+            <div class="feat-icon icon-share" aria-hidden="true">
+              <span class="ic-node ic-node-1"></span>
+              <span class="ic-node ic-node-2"></span>
+              <span class="ic-node ic-node-3"></span>
+              <span class="ic-link"></span>
             </div>
-            <h3>Dream &amp; plan</h3>
-            <p>Save destinations still calling your name. Turn a wish list into a flight path.</p>
-          </article>
-
-          <article class="bento-card reveal" data-delay="180">
-            <div class="bento-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="6" cy="12" r="2.5" />
-                <circle cx="18" cy="6" r="2.5" />
-                <circle cx="18" cy="18" r="2.5" />
-                <path d="M8.5 11 L15.5 7M8.5 13 L15.5 17" />
-              </svg>
-            </div>
-            <h3>Share with anyone</h3>
-            <p>One link sends your whole world. No app download required.</p>
+            <h3>Share Your World</h3>
+            <p>One link. Your entire travel story. Let friends and family explore your globe, see where you've been, discover where you're headed.</p>
+            <ul class="feat-list">
+              <li>Public share link</li>
+              <li>Read-only view</li>
+              <li>Works on any device</li>
+            </ul>
           </article>
         </div>
       </section>
 
-      <!-- How it works -->
-      <section class="section how" id="how">
-        <div class="section-head reveal">
-          <p class="label">How it works</p>
-          <h2>Three steps to your<br />personal globe</h2>
+      <!-- ── Section 5 — Interactive demo strip ─────────────────────────────── -->
+      <section class="section demo-strip" id="demo">
+        <div class="section-head section-head-center reveal">
+          <p class="eyebrow">Live preview</p>
+          <h2>See it in action.</h2>
+          <p class="section-lead">This is your globe. These are real features.</p>
         </div>
 
-        <div class="steps-grid">
-          <article class="step-card reveal">
-            <span class="step-index">01</span>
-            <h3>Create your account</h3>
-            <p>Sign up in seconds with your email — no passwords to remember.</p>
+        <div class="phones reveal" data-delay="120">
+          <!-- Phone 1 — spinning globe with pins -->
+          <div class="phone phone-float-1">
+            <div class="phone-glow phone-glow-blue"></div>
+            <div class="phone-notch"></div>
+            <div class="phone-screen screen-globe">
+              <div class="mini-earth">
+                <span class="me-pin me-pin-1"></span>
+                <span class="me-pin me-pin-2"></span>
+                <span class="me-pin me-pin-3"></span>
+              </div>
+              <div class="screen-caption">Your living globe</div>
+            </div>
+          </div>
+
+          <!-- Phone 2 — Add Pin panel sliding in -->
+          <div class="phone phone-float-2">
+            <div class="phone-glow phone-glow-coral"></div>
+            <div class="phone-notch"></div>
+            <div class="phone-screen screen-add">
+              <div class="add-sheet">
+                <span class="add-title">Add Pin</span>
+                <span class="add-coords">35.68° N, 139.65° E</span>
+                <span class="add-field"></span>
+                <span class="add-field short"></span>
+                <div class="add-types"><span class="add-chip on">Visited</span><span class="add-chip">Wishlist</span></div>
+                <span class="add-save">Save Pin</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Phone 3 — pin info card with photo + note -->
+          <div class="phone phone-float-3">
+            <div class="phone-glow phone-glow-gold"></div>
+            <div class="phone-notch"></div>
+            <div class="phone-screen screen-card">
+              <div class="info-card">
+                <span class="ic-badge">Visited</span>
+                <span class="ic-name">Tokyo, Japan</span>
+                <div class="ic-photo"></div>
+                <span class="ic-note">Neon nights &amp; the best ramen of my life.</span>
+                <span class="ic-coords">35.68° N, 139.65° E</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Section 6 — Testimonials ───────────────────────────────────────── -->
+      <section class="section testimonials" id="testimonials">
+        <div class="section-head section-head-center reveal">
+          <p class="eyebrow">Loved worldwide</p>
+          <h2>Explorers love it.</h2>
+        </div>
+
+        <div class="quote-cards">
+          <article class="quote-card reveal">
+            <div class="stars">★★★★★</div>
+            <blockquote>"I've been to 34 countries and Wanderglobe is the first thing that actually captures all of it in one place."</blockquote>
+            <div class="quote-author">
+              <span class="avatar" style="--a:#4fc3f7;--b:#ff6b8a">PS</span>
+              <span class="author-meta"><strong>Priya S.</strong><span>India 🇮🇳</span></span>
+            </div>
           </article>
-          <article class="step-card reveal" data-delay="100">
-            <span class="step-index">02</span>
-            <h3>Spin &amp; drop pins</h3>
-            <p>Rotate a living 3D Earth and pin everywhere you've been or dream of going.</p>
+
+          <article class="quote-card reveal" data-delay="120">
+            <div class="stars">★★★★★</div>
+            <blockquote>"Showed my mum my globe and she cried. She could finally SEE everywhere I'd been."</blockquote>
+            <div class="quote-author">
+              <span class="avatar" style="--a:#ffd700;--b:#ffa500">ML</span>
+              <span class="author-meta"><strong>Marcus L.</strong><span>UK 🇬🇧</span></span>
+            </div>
           </article>
-          <article class="step-card reveal" data-delay="200">
-            <span class="step-index">03</span>
-            <h3>Share your link</h3>
-            <p>Send your personal globe to anyone, anywhere. Your journey, on display.</p>
+
+          <article class="quote-card reveal" data-delay="240">
+            <div class="stars">★★★★★</div>
+            <blockquote>"The solar system easter egg alone is worth it. Most beautiful travel app I've ever used."</blockquote>
+            <div class="quote-author">
+              <span class="avatar" style="--a:#00e5cc;--b:#4fc3f7">YT</span>
+              <span class="author-meta"><strong>Yuki T.</strong><span>Japan 🇯🇵</span></span>
+            </div>
           </article>
         </div>
       </section>
 
-      <!-- Why Wanderglobe -->
-      <section class="section why" id="why">
-        <div class="why-grid">
-          <div class="why-copy reveal">
-            <p class="label">Why Wanderglobe</p>
-            <h2>Travel memories deserve more than a list</h2>
-            <p class="section-lead">
-              Maps flatten the world. Photo albums hide the scale. Wanderglobe puts
-              your story on a planet you can spin, share, and revisit forever.
-            </p>
-          </div>
-
-          <div class="why-points reveal" data-delay="100">
-            <div class="why-item">
-              <span class="why-num">01</span>
-              <div>
-                <h4>Spatial storytelling</h4>
-                <p>See how your travels connect across continents.</p>
-              </div>
-            </div>
-            <div class="why-item">
-              <span class="why-num">02</span>
-              <div>
-                <h4>Cinema-grade visuals</h4>
-                <p>Realistic Earth rendering with atmosphere and lighting.</p>
-              </div>
-            </div>
-            <div class="why-item">
-              <span class="why-num">03</span>
-              <div>
-                <h4>Instant sharing</h4>
-                <p>One URL — no installs, no friction for your audience.</p>
-              </div>
-            </div>
-            <div class="why-item">
-              <span class="why-num">04</span>
-              <div>
-                <h4>Built for wanderers</h4>
-                <p>Designed for anyone who collects places, not just photos.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <blockquote class="why-quote reveal" data-delay="180">
-          <p>"The closest thing to holding the world in your hands."</p>
-        </blockquote>
-      </section>
-
-      <!-- CTA -->
-      <section class="cta-section" id="cta">
-        <div class="cta-beam" aria-hidden="true"></div>
-        <div class="cta-inner reveal">
-          <div class="cta-border" aria-hidden="true"></div>
-          <div class="cta-content">
-            <p class="label label-light">Ready when you are</p>
-            <h2>Ready to pin your world?</h2>
-            <p class="cta-lead">
-              Create your account in seconds and step onto a globe that's yours.
-            </p>
-
-            <button class="btn btn-glow btn-xl js-open-login" type="button">
-              <span class="cta-label">Explore the Globe</span>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-
-            <p class="cta-note">Free to explore · No credit card required</p>
-          </div>
+      <!-- ── Section 7 — CTA finale ─────────────────────────────────────────── -->
+      <section class="cta-finale" id="cta">
+        <div class="cta-finale-bg" aria-hidden="true"></div>
+        <div class="cta-finale-inner reveal">
+          <h2>Your world is waiting.</h2>
+          <p class="cta-finale-sub">Start pinning in 30 seconds. Free forever.</p>
+          <button class="btn btn-primary btn-xl js-open-login" type="button">
+            <span class="cta-label">Open Wanderglobe</span>
+            <span class="cta-arrow">→</span>
+          </button>
+          <p class="cta-finale-note">No credit card. No downloads. Just your globe.</p>
         </div>
       </section>
     </main>
 
+    <!-- ── Section 8 — Footer ─────────────────────────────────────────────── -->
     <footer class="footer">
       <div class="footer-inner">
-        <a class="footer-brand" href="#hero">
-          <svg class="nav-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-            <circle cx="24" cy="29" r="13" stroke="rgba(255,255,255,0.4)" stroke-width="1.7" />
-            <ellipse cx="24" cy="29" rx="5.6" ry="13" stroke="rgba(255,255,255,0.4)" stroke-width="1.1" />
-            <path d="M11.7 25.2h24.6M12.1 33h23.8" stroke="rgba(255,255,255,0.4)" stroke-width="1.1" />
-            <path d="M24 4.6a5.2 5.2 0 0 1 5.2 5.2c0 3.9-3.3 5.4-5.2 8.6-1.9-3.2-5.2-4.7-5.2-8.6A5.2 5.2 0 0 1 24 4.6z" stroke="rgba(255,255,255,0.4)" stroke-width="1.7" />
-            <circle cx="24" cy="9.8" r="1.9" fill="rgba(255,255,255,0.4)" />
+        <a class="footer-brand" href="#hero" aria-label="Wanderglobe — home">
+          <svg class="wg-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="wgFoot" x1="6" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#4fc3f7" />
+                <stop offset="0.55" stop-color="#7a9bff" />
+                <stop offset="1" stop-color="#ff6b8a" />
+              </linearGradient>
+            </defs>
+            <circle cx="24" cy="30" r="12" stroke="url(#wgFoot)" stroke-width="1.6" />
+            <ellipse cx="24" cy="30" rx="5" ry="12" stroke="url(#wgFoot)" stroke-width="1.1" opacity="0.9" />
+            <ellipse cx="24" cy="30" rx="12" ry="4.4" stroke="url(#wgFoot)" stroke-width="1.1" opacity="0.9" />
+            <path d="M13.4 24.7c3.2 1 18 1 21.2 0M13.4 35.3c3.2-1 18-1 21.2 0" stroke="url(#wgFoot)" stroke-width="1" opacity="0.6" />
+            <path d="M24 3.4c-4.3 0-7.7 3.4-7.7 7.6 0 4.3 7.7 7.4 7.7 7.4s7.7-3.1 7.7-7.4c0-4.2-3.4-7.6-7.7-7.6z" fill="url(#wgFoot)" />
+            <path d="M24 7.9l0.9 2.2 2.2 0.9-2.2 0.9-0.9 2.2-0.9-2.2-2.2-0.9 2.2-0.9z" fill="#fff" opacity="0.95" />
           </svg>
           <span class="brand-word">Wanderglobe</span>
         </a>
-        <p class="footer-copy">© 2026 Wanderglobe · Built with Three.js and a love for travel.</p>
+        <p class="footer-center">Made with ❤️ and three.js — © 2026 Wanderglobe</p>
+        <div class="footer-links">
+          <a href="#">Privacy</a>
+          <a href="#">Twitter / X</a>
+          <a href="#">GitHub</a>
+        </div>
       </div>
     </footer>
 
@@ -334,18 +398,20 @@
 
           <div class="login-shell">
             <div class="login-brand">
-              <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+              <svg class="wg-logo" viewBox="0 0 48 48" fill="none" aria-hidden="true">
                 <defs>
-                  <linearGradient id="wgModal" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stop-color="#f2f6ff" />
-                    <stop offset="1" stop-color="#7aa7ff" />
+                  <linearGradient id="wgModal" x1="6" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" stop-color="#4fc3f7" />
+                    <stop offset="0.55" stop-color="#7a9bff" />
+                    <stop offset="1" stop-color="#ff6b8a" />
                   </linearGradient>
                 </defs>
-                <circle cx="24" cy="29" r="13" stroke="url(#wgModal)" stroke-width="1.7" />
-                <ellipse cx="24" cy="29" rx="5.6" ry="13" stroke="url(#wgModal)" stroke-width="1.1" opacity="0.85" />
-                <path d="M11.7 25.2h24.6M12.1 33h23.8" stroke="url(#wgModal)" stroke-width="1.1" opacity="0.85" />
-                <path d="M24 4.6a5.2 5.2 0 0 1 5.2 5.2c0 3.9-3.3 5.4-5.2 8.6-1.9-3.2-5.2-4.7-5.2-8.6A5.2 5.2 0 0 1 24 4.6z" stroke="url(#wgModal)" stroke-width="1.7" />
-                <circle cx="24" cy="9.8" r="1.9" fill="url(#wgModal)" />
+                <circle cx="24" cy="30" r="12" stroke="url(#wgModal)" stroke-width="1.6" />
+                <ellipse cx="24" cy="30" rx="5" ry="12" stroke="url(#wgModal)" stroke-width="1.1" opacity="0.9" />
+                <ellipse cx="24" cy="30" rx="12" ry="4.4" stroke="url(#wgModal)" stroke-width="1.1" opacity="0.9" />
+                <path d="M13.4 24.7c3.2 1 18 1 21.2 0M13.4 35.3c3.2-1 18-1 21.2 0" stroke="url(#wgModal)" stroke-width="1" opacity="0.6" />
+                <path d="M24 3.4c-4.3 0-7.7 3.4-7.7 7.6 0 4.3 7.7 7.4 7.7 7.4s7.7-3.1 7.7-7.4c0-4.2-3.4-7.6-7.7-7.6z" fill="url(#wgModal)" />
+                <path d="M24 7.9l0.9 2.2 2.2 0.9-2.2 0.9-0.9 2.2-0.9-2.2-2.2-0.9 2.2-0.9z" fill="#fff" opacity="0.95" />
               </svg>
               <span class="brand-word">Wanderglobe</span>
             </div>
@@ -369,7 +435,7 @@
                   <input id="f-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required />
                 </label>
                 <p class="otp-confirm" id="otp-confirm" hidden>OTP sent to <strong id="otp-email"></strong></p>
-                <button type="submit" class="btn btn-glow btn-block" id="send-otp">Send OTP</button>
+                <button type="submit" class="btn btn-primary btn-block" id="send-otp">Send OTP</button>
               </form>
 
               <!-- Step 2: one-time code -->
@@ -388,7 +454,7 @@
                   <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 5" />
                   <input class="otp-digit" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 6" />
                 </div>
-                <button type="submit" class="btn btn-glow btn-block">Verify</button>
+                <button type="submit" class="btn btn-primary btn-block">Verify</button>
               </form>
 
               <!-- Step 3: profile -->
@@ -413,7 +479,7 @@
                     <input id="f-dob" type="date" required />
                   </label>
                 </div>
-                <button type="submit" class="btn btn-glow btn-block">Enter Wanderglobe</button>
+                <button type="submit" class="btn btn-primary btn-block">Enter Wanderglobe</button>
               </form>
             </div>
           </div>

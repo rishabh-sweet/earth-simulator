@@ -1,17 +1,22 @@
-// Wanderglobe landing — starfield, scroll reveals, hero parallax, nav, login.
+// Wanderglobe landing — starfield, mini globe, scroll reveals, counters, nav, login.
+
+import { initMiniGlobe } from './miniGlobe.js';
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ── Mini 3D globe in the hero ─────────────────────────────────────────────────
+initMiniGlobe(document.getElementById('mini-globe-canvas'));
 
 // ── Starfield ────────────────────────────────────────────────────────────────
 const canvas = document.getElementById('stars');
 const ctx = canvas.getContext('2d');
 let stars = [];
-let animating = !reducedMotion;
+const animating = !reducedMotion;
 
 function buildStars() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  const density = reducedMotion ? 8000 : 4200;
+  const density = reducedMotion ? 9000 : 5000;
   const count = Math.floor((canvas.width * canvas.height) / density);
   stars = Array.from({ length: count }, () => ({
     x: Math.random() * canvas.width,
@@ -26,21 +31,19 @@ function buildStars() {
 function drawStars(t) {
   if (!animating) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   for (const st of stars) {
     st.x -= st.s * (0.5 + st.depth);
     st.y += st.s * 0.2;
     if (st.x < 0) st.x = canvas.width;
     if (st.y > canvas.height) st.y = 0;
-
     const twinkle = 0.35 + 0.65 * Math.sin(t / (700 + st.depth * 400) + st.p);
     ctx.globalAlpha = twinkle * (0.4 + st.depth * 0.6);
-    ctx.fillStyle = st.depth > 0.6 ? '#ffffff' : '#a8c4ff';
+    // electric-blue / gold / coral-white star mix to match the palette
+    ctx.fillStyle = st.depth > 0.7 ? '#ffffff' : st.depth > 0.4 ? '#ffe9b0' : '#9fd8ff';
     ctx.beginPath();
     ctx.arc(st.x, st.y, st.r * (0.7 + st.depth * 0.5), 0, Math.PI * 2);
     ctx.fill();
   }
-
   ctx.globalAlpha = 1;
   requestAnimationFrame(drawStars);
 }
@@ -49,7 +52,7 @@ buildStars();
 window.addEventListener('resize', buildStars);
 if (animating) requestAnimationFrame(drawStars);
 
-// ── Nav ──────────────────────────────────────────────────────────────────────
+// ── Nav: glass background on scroll ───────────────────────────────────────────
 const header = document.getElementById('nav');
 const navToggle = document.getElementById('nav-toggle');
 const mobileMenu = document.getElementById('mobile-menu');
@@ -57,7 +60,6 @@ const mobileMenu = document.getElementById('mobile-menu');
 function onScroll() {
   header.classList.toggle('scrolled', window.scrollY > 20);
 }
-
 window.addEventListener('scroll', onScroll, { passive: true });
 onScroll();
 
@@ -67,21 +69,15 @@ function closeMobileMenu() {
   mobileMenu.classList.remove('open');
   mobileMenu.setAttribute('aria-hidden', 'true');
 }
-
 navToggle.addEventListener('click', () => {
   const open = navToggle.classList.toggle('open');
   navToggle.setAttribute('aria-expanded', String(open));
   mobileMenu.classList.toggle('open', open);
   mobileMenu.setAttribute('aria-hidden', String(!open));
 });
+mobileMenu.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMobileMenu));
 
-mobileMenu.querySelectorAll('a').forEach((link) => {
-  link.addEventListener('click', closeMobileMenu);
-});
-
-// ── Scroll reveal ────────────────────────────────────────────────────────────
-const revealEls = document.querySelectorAll('.reveal');
-
+// ── Scroll reveal ─────────────────────────────────────────────────────────────
 const revealObserver = new IntersectionObserver(
   (entries) => {
     for (const entry of entries) {
@@ -94,72 +90,69 @@ const revealObserver = new IntersectionObserver(
   },
   { threshold: 0.08, rootMargin: '0px 0px -60px 0px' }
 );
-
-revealEls.forEach((el) => revealObserver.observe(el));
+document.querySelectorAll('.reveal').forEach((el) => revealObserver.observe(el));
 
 // Hero: staggered entrance on load
-const heroReveals = document.querySelectorAll('#hero .reveal');
-heroReveals.forEach((el, i) => {
+document.querySelectorAll('#hero .reveal').forEach((el, i) => {
   const delay = Number(el.dataset.delay || 0) + i * 60;
   setTimeout(() => el.classList.add('visible'), 100 + delay);
 });
 
-// Hero title words: extra stagger
+// Hero title words: extra per-word stagger
 if (!reducedMotion) {
   document.querySelectorAll('.hero-title .line').forEach((line, lineIdx) => {
-    const words = line.querySelectorAll('.word');
-    words.forEach((word, wordIdx) => {
+    line.querySelectorAll('.word').forEach((word, wordIdx) => {
       word.style.opacity = '0';
       word.style.transform = 'translateY(20px)';
-      word.style.transition = `opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${lineIdx * 120 + wordIdx * 70}ms, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${lineIdx * 120 + wordIdx * 70}ms`;
+      const ms = lineIdx * 120 + wordIdx * 70;
+      word.style.transition = `opacity 0.7s cubic-bezier(0.16,1,0.3,1) ${ms}ms, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${ms}ms`;
       setTimeout(() => {
         word.style.opacity = '1';
         word.style.transform = 'translateY(0)';
-      }, 150 + lineIdx * 120 + wordIdx * 70);
+      }, 150 + ms);
     });
   });
 }
 
-// ── Hero parallax ────────────────────────────────────────────────────────────
-const heroStage = document.getElementById('hero-stage');
+// ── Animated number counters (stats bar) ──────────────────────────────────────
+const easeOutExpo = (t) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
 
-if (heroStage && !reducedMotion) {
-  let targetX = 0;
-  let targetY = 0;
-  let currentX = 0;
-  let currentY = 0;
-
-  document.addEventListener('mousemove', (e) => {
-    const cx = window.innerWidth / 2;
-    const cy = window.innerHeight / 2;
-    targetX = (e.clientX - cx) / cx;
-    targetY = (e.clientY - cy) / cy;
-  });
-
-  function tickParallax() {
-    currentX += (targetX - currentX) * 0.06;
-    currentY += (targetY - currentY) * 0.06;
-
-    const rotateY = currentX * 6;
-    const rotateX = -currentY * 4;
-    const translateX = currentX * 12;
-    const translateY = currentY * 8;
-
-    heroStage.style.transform = `
-      perspective(1200px)
-      rotateX(${rotateX}deg)
-      rotateY(${rotateY}deg)
-      translateX(${translateX}px)
-      translateY(${translateY}px)
-    `;
-
-    requestAnimationFrame(tickParallax);
-  }
-
-  requestAnimationFrame(tickParallax);
+function format(value, decimals) {
+  return value.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
-// ── Login modal ──────────────────────────────────────────────────────────────
+function runCounter(el) {
+  const target = parseFloat(el.dataset.count || '0');
+  const decimals = Number(el.dataset.decimals || 0);
+  const suffix = el.dataset.suffix || '';
+  if (reducedMotion) {
+    el.textContent = format(target, decimals) + suffix;
+    return;
+  }
+  const duration = 2000;
+  const start = performance.now();
+  function tick(now) {
+    const k = Math.min((now - start) / duration, 1);
+    el.textContent = format(target * easeOutExpo(k), decimals) + suffix;
+    if (k < 1) requestAnimationFrame(tick);
+    else el.textContent = format(target, decimals) + suffix;
+  }
+  requestAnimationFrame(tick);
+}
+
+const counterObserver = new IntersectionObserver(
+  (entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      runCounter(entry.target);
+      counterObserver.unobserve(entry.target);
+    }
+  },
+  { threshold: 0.4 }
+);
+document.querySelectorAll('.stat-num').forEach((el) => counterObserver.observe(el));
+
+// ── Login modal ───────────────────────────────────────────────────────────────
 const overlay = document.getElementById('login');
 const loginClose = document.getElementById('login-close');
 const panesWrap = document.getElementById('login-panes');
@@ -176,7 +169,6 @@ const otpDigits = overlay.querySelectorAll('.otp-digit');
 let step = 0;
 let userEmail = '';
 
-// The saved traveller, if they've onboarded before.
 function getUser() {
   try {
     return JSON.parse(localStorage.getItem('wanderglobe_user'));
@@ -210,7 +202,7 @@ function closeLogin() {
   document.body.style.overflow = '';
 }
 
-// Every "Explore the Globe" trigger: returning users skip straight to the globe.
+// Every CTA: returning users skip straight to the globe, new users see the modal.
 document.querySelectorAll('.js-open-login').forEach((el) => {
   el.addEventListener('click', (e) => {
     e.preventDefault();
@@ -231,12 +223,11 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && overlay.classList.contains('open')) closeLogin();
 });
 
-// Back buttons on steps 2 and 3
 overlay.querySelectorAll('[data-back]').forEach((btn) => {
   btn.addEventListener('click', () => setStep(step - 1, true));
 });
 
-// Step 1 → "send" the OTP (demo only: confirmation text, no real email)
+// Step 1 → "send" the OTP (demo only)
 panes[0].addEventListener('submit', (e) => {
   e.preventDefault();
   const email = emailInput.value.trim();
@@ -251,7 +242,7 @@ panes[0].addEventListener('submit', (e) => {
   document.getElementById('otp-email-2').textContent = email;
   otpConfirm.hidden = false;
   otpDigits.forEach((d) => (d.value = ''));
-  setTimeout(() => setStep(1), 1000); // let the confirmation register, then advance
+  setTimeout(() => setStep(1), 1000);
 });
 
 // OTP boxes: type to advance, backspace to retreat, paste fills all six
@@ -294,9 +285,9 @@ panes[2].addEventListener('submit', (e) => {
     'wanderglobe_user',
     JSON.stringify({ name, age: Number(age) || null, dob: dob || null, email: userEmail })
   );
-  overlay.classList.add('leaving'); // smooth fade out…
+  overlay.classList.add('leaving');
   setTimeout(() => {
-    window.location.href = '/globe/'; // …then into the globe
+    window.location.href = '/globe/';
   }, 480);
 });
 
@@ -304,22 +295,20 @@ panes[2].addEventListener('submit', (e) => {
 const savedUser = getUser();
 if (savedUser && savedUser.name) {
   document.querySelectorAll('.js-open-login .cta-label').forEach((label) => {
-    label.textContent = `Welcome back, ${savedUser.name} — Enter the Globe`;
+    label.textContent = `Welcome back, ${savedUser.name}`;
   });
 }
 
-// ── Smooth anchor offset for fixed nav ───────────────────────────────────────
+// ── Smooth anchor scroll with fixed-nav offset ────────────────────────────────
 document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-  // login triggers navigate or open the modal instead of scrolling
-  if (anchor.classList.contains('js-open-login')) return;
+  if (anchor.classList.contains('js-open-login')) return; // those open the modal
   anchor.addEventListener('click', (e) => {
     const id = anchor.getAttribute('href');
     if (id === '#') return;
     const target = document.querySelector(id);
     if (!target) return;
     e.preventDefault();
-    const offset = 100;
-    const top = target.getBoundingClientRect().top + window.scrollY - offset;
+    const top = target.getBoundingClientRect().top + window.scrollY - 90;
     window.scrollTo({ top, behavior: reducedMotion ? 'auto' : 'smooth' });
   });
 });

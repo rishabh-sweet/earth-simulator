@@ -60,15 +60,21 @@ export function createEarthView(canvas, maxAnisotropy = 1, manager) {
   scene.add(atmosphere);
   scene.add(createStarfield());
 
+  // Auto-spin can be paused (e.g. while the user is aiming a travel pin).
+  let spin = true;
+  function setSpin(on) { spin = on; }
+
   function update(dt) {
     const sun = getSunDirection();
     earth.material.uniforms.sunDirection.value.copy(sun);
     clouds.material.uniforms.sunDirection.value.copy(sun);
     shadow.material.uniforms.sunDirection.value.copy(sun);
     atmosphere.material.uniforms.sunDirection.value.copy(sun);
-    earth.rotation.y += 0.048 * dt;  // slow auto-spin (same speed as before)
-    clouds.rotation.y += 0.062 * dt; // a touch faster, so clouds drift over the surface
-    shadow.rotation.y += 0.062 * dt; // shadow tracks the clouds
+    if (spin) {
+      earth.rotation.y += 0.048 * dt;  // slow auto-spin (same speed as before)
+      clouds.rotation.y += 0.062 * dt; // a touch faster, so clouds drift over the surface
+      shadow.rotation.y += 0.062 * dt; // shadow tracks the clouds
+    }
   }
 
   function getDistance() {
@@ -87,5 +93,5 @@ export function createEarthView(canvas, maxAnisotropy = 1, manager) {
     camera.updateProjectionMatrix();
   }
 
-  return { scene, camera, controls, update, getDistance, reset, resize };
+  return { scene, camera, controls, canvas, earth, setSpin, update, getDistance, reset, resize };
 }

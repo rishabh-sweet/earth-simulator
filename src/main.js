@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { createEarthView } from './earthView.js';
 import { createSolarView } from './solarView.js';
 import { createInfoPanel } from './infoPanel.js';
+import { createPinManager } from './pinUI.js';
 import { tween, updateTweens } from './tween.js';
 import { SoundManager } from './sound.js';
 
@@ -37,7 +38,11 @@ const fadeEl = document.getElementById('fade');
 const btnBack = document.getElementById('btn-back');
 const btnEarth = document.getElementById('btn-earth');
 const btnSound = document.getElementById('btn-sound');
+const btnPin = document.getElementById('btn-pin');
 const hintEl = document.getElementById('hint');
+
+// The idle hint shown on the close-up Earth view.
+const EARTH_HINT = 'Drop pins on Earth · zoom out to explore the solar system';
 
 // ── Sound ────────────────────────────────────────────────────────────────────
 // All audio is synthesised live (see sound.js). It can't start until the user
@@ -61,6 +66,10 @@ btnSound.addEventListener('click', () => {
   btnSound.classList.toggle('muted', !on);
   btnSound.setAttribute('aria-pressed', String(on));
 });
+
+// ── Travel pins (Earth close-up view) ────────────────────────────────────────
+const pins = createPinManager({ earthView, sound, setHint, earthHint: EARTH_HINT });
+btnPin.addEventListener('click', () => { sound.click(); pins.toggleMode(); });
 
 // ── Loading screen ─────────────────────────────────────────────────────────
 // Hold the globe behind a full-screen loader until every texture is in, then
@@ -89,6 +98,8 @@ function revealGlobe() {
   loaderFill.style.transform = 'scaleX(1)';
   loaderEl.classList.add('done');
   earthView.controls.enabled = true;
+  pins.showChrome();
+  setHint(EARTH_HINT);
   showWelcomeBack();
 }
 
@@ -169,6 +180,7 @@ function fade(to, duration, onComplete) {
 function goToSolar() {
   transitioning = true;
   earthView.controls.enabled = false;
+  pins.hideChrome(); // exits pin mode, closes any open sheet, hides the tally
   sound.whoosh();
   flyCamera(earthView, new THREE.Vector3(0, 0, 16), ORIGIN, 700); // pull away from Earth
   fade(1, 650, () => {
@@ -205,7 +217,8 @@ function goToEarth() {
     sound.setAmbient('earth');
     earthView.reset();
     earthView.controls.enabled = false;
-    setHint('Zoom out to enter the solar system');
+    pins.showChrome();
+    setHint(EARTH_HINT);
     fade(0, 800, () => {
       transitioning = false;
       earthView.controls.enabled = true;
@@ -284,28 +297,88 @@ function pick(clientX, clientY) {
   return hit ? hit.object.userData.body : null;
 }
 
+// Raycast the Earth's surface (used when dropping a pin in Pin Mode).
+function pickEarthSurface(clientX, clientY) {
+  ndc.x = (clientX / window.innerWidth) * 2 - 1;
+  ndc.y = -(clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(ndc, earthView.camera);
+  const hits = raycaster.intersectObject(earthView.earth, false);
+  return hits.length ? hits[0] : null;
+}
+
 // A tap is a press + release that barely moved (so it isn't a drag-rotate).
 let pointerDown = null;
+let longPressTimer = null;
+let longPressFired = false;
+
+function clearLongPress() {
+  if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+}
+
 canvas.addEventListener('pointerdown', (e) => {
   pointerDown = { x: e.clientX, y: e.clientY, t: performance.now() };
+  longPressFired = false;
+  // Long-press an existing pin (when not in Pin Mode) → edit it.
+  if (mode === 'earth' && ready && !busy() && !pins.isPinMode()) {
+    longPressTimer = setTimeout(() => {
+      const id = pins.pickPin(e.clientX, e.clientY);
+      if (id) { longPressFired = true; pins.openEdit(id); }
+    }, 550);
+  }
 });
+
+// Cancel the long-press if the finger/cursor moves (that's a drag-rotate).
+canvas.addEventListener('pointermove', (e) => {
+  if (longPressTimer && pointerDown &&
+      Math.hypot(e.clientX - pointerDown.x, e.clientY - pointerDown.y) > 8) {
+    clearLongPress();
+  }
+});
+canvas.addEventListener('pointercancel', clearLongPress);
+
 window.addEventListener('pointerup', (e) => {
   const d = pointerDown;
   pointerDown = null;
-  if (!d || !ready || mode !== 'solar' || busy()) return;
+  clearLongPress();
+  if (!d || !ready || busy()) return;
+  if (longPressFired) { longPressFired = false; return; } // edit already opened
+
   const moved = Math.hypot(e.clientX - d.x, e.clientY - d.y);
-  if (moved > 8 || performance.now() - d.t > 500) return; // it was a drag
-  const hit = pickHit(e.clientX, e.clientY);
-  const body = hit ? hit.object.userData.body : null;
-  if (body) {
-    // For an asteroid-belt rock, anchor the card's lines at the exact click.
-    if (body.dynamicAnchor && body !== focusedBody && body.object3d) {
-      body.object3d.position.copy(hit.point);
+  const isTap = moved <= 8 && performance.now() - d.t <= 500;
+
+  if (mode === 'solar') {
+    if (!isTap) return;
+    const hit = pickHit(e.clientX, e.clientY);
+    const body = hit ? hit.object.userData.body : null;
+    if (body) {
+      // For an asteroid-belt rock, anchor the card's lines at the exact click.
+      if (body.dynamicAnchor && body !== focusedBody && body.object3d) {
+        body.object3d.position.copy(hit.point);
+      }
+      focusBody(body);
+    } else if (focusedBody) {
+      unfocus();
     }
-    focusBody(body);
-  } else if (focusedBody) {
-    unfocus();
+    return;
   }
+
+  // Earth close-up view.
+  if (!isTap) return;
+  if (pins.isPinMode()) {
+    if (pins.panelOpen()) return;            // finish the current pin first
+    const hit = pickEarthSurface(e.clientX, e.clientY);
+    if (hit) pins.openAdd(hit.point);
+  } else {
+    const id = pins.pickPin(e.clientX, e.clientY);
+    if (id) pins.openCard(id);
+  }
+});
+
+// Right-click an existing pin → edit it.
+canvas.addEventListener('contextmenu', (e) => {
+  if (mode !== 'earth' || !ready || busy() || pins.isPinMode()) return;
+  const id = pins.pickPin(e.clientX, e.clientY);
+  if (id) { e.preventDefault(); pins.openEdit(id); }
 });
 
 // Hover a body in the solar view → play its unique tone (once per entry).
@@ -326,6 +399,16 @@ window.addEventListener('pointermove', (e) => {
   }
 });
 
+// Hover a pin in the Earth view → grow it and show a pointer cursor.
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType === 'touch') return;
+  if (!ready || mode !== 'earth' || busy()) return;
+  if (pins.isPinMode()) { pins.setHover(null); return; } // crosshair set on toggle
+  const id = pins.pickPin(e.clientX, e.clientY);
+  pins.setHover(id);
+  canvas.style.cursor = id ? 'pointer' : '';
+});
+
 // ── Resize ───────────────────────────────────────────────────────────────────
 window.addEventListener('resize', () => {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -335,7 +418,7 @@ window.addEventListener('resize', () => {
 });
 
 // ── Main loop ────────────────────────────────────────────────────────────────
-setHint('Zoom out to enter the solar system');
+setHint(EARTH_HINT);
 let last = performance.now();
 function animate(now) {
   requestAnimationFrame(animate);
@@ -345,10 +428,11 @@ function animate(now) {
 
   if (mode === 'earth') {
     earthView.update(dt);
+    pins.update(dt);
     if (!busy()) earthView.controls.update();
     renderer.render(earthView.scene, earthView.camera);
-    // Pull back far enough and we leave for the solar system.
-    if (ready && !busy() && earthView.getDistance() > EARTH_EXIT_DIST) goToSolar();
+    // Pull back far enough (and not mid-pin) → leave for the solar system.
+    if (ready && !busy() && !pins.panelOpen() && earthView.getDistance() > EARTH_EXIT_DIST) goToSolar();
   } else {
     solarView.update(dt);
     if (!busy()) solarView.controls.update();
