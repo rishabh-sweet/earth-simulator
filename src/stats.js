@@ -63,7 +63,7 @@ function haversine(a, b) {
 
 const easeOutExpo = (t) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
 
-export function createStatsOverlay({ getPins, getTrips }) {
+export function createStatsOverlay({ getPins, getTrips, getCountryCount }) {
   const overlay = $('stats-overlay');
   const grid = $('stats-grid');
   const scoreNum = $('score-num');
@@ -87,6 +87,9 @@ export function createStatsOverlay({ getPins, getTrips }) {
       if (cont) continentCounts[cont] = (continentCounts[cont] || 0) + 1;
     }
     const continents = Object.keys(continentCounts);
+    // Prefer the precise count from the country-fill layer when it's loaded.
+    const liveCountries = typeof getCountryCount === 'function' ? getCountryCount() : null;
+    const countryTotal = liveCountries != null ? liveCountries : countries.size;
 
     // distance: sum great-circle hops between visited pins in date order
     const ordered = [...visited].sort((a, b) => (a.dateAdded || '').localeCompare(b.dateAdded || ''));
@@ -97,7 +100,7 @@ export function createStatsOverlay({ getPins, getTrips }) {
       ? continents.reduce((m, c) => (continentCounts[c] > continentCounts[m] ? c : m), continents[0])
       : '—';
 
-    const score = Math.min(1000, countries.size * 10 + continents.length * 50 + visited.length * 2);
+    const score = Math.min(1000, countryTotal * 10 + continents.length * 50 + (visited.length + wishlist.length) * 2);
     const rank = score >= 700 ? 'Legend' : score >= 400 ? 'Globetrotter' : score >= 150 ? 'Adventurer' : 'Explorer';
 
     // longest trip: collection with the most pins (tie → widest date range)
@@ -112,7 +115,7 @@ export function createStatsOverlay({ getPins, getTrips }) {
     const first = ordered.find((p) => p.dateAdded);
 
     return {
-      countries: countries.size, continents, continentCounts, mostRegion,
+      countries: countryTotal, continents, continentCounts, mostRegion,
       visited: visited.length, wishlist: wishlist.length, distance: Math.round(distance),
       score, rank, longestTrip, first,
     };

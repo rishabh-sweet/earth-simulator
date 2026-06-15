@@ -148,6 +148,8 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
   let newTripEmoji = '✈️';
   let newTripColour = '#ffce6a';
   let flightsOn = false;
+  let changeListener = null;
+  function notifyChange() { if (changeListener) changeListener(); }
 
   // initial render
   store.forEach((p) => layer.addPin(renderData(p)));
@@ -363,6 +365,7 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     layer.clearPending();
     renderStats();
     rebuildFlights();
+    notifyChange();
     if (selectedTripId) layer.setHighlight(selectedTripId);
     if (tripsPanel.classList.contains('open')) renderTripsList();
     closeSheet(panel);
@@ -408,6 +411,7 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     persist();
     renderStats();
     rebuildFlights();
+    notifyChange();
     cardId = null;
     closeSheet(card);
     sound.click();
@@ -587,7 +591,7 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     toggleMode, isPinMode, panelOpen,
     showChrome, hideChrome, closePanels,
     pickPin, openAdd, openCard, openEdit,
-    toggleFlights, openTrips,
+    toggleFlights, openTrips, setOnChange: (fn) => { changeListener = fn; },
     getPins: () => store,
     getTrips: () => trips,
     getCounts: () => {

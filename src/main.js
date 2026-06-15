@@ -3,9 +3,16 @@ import { createEarthView } from './earthView.js';
 import { createSolarView } from './solarView.js';
 import { createInfoPanel } from './infoPanel.js';
 import { createPinManager } from './pinUI.js';
+import { latLngFromLocal } from './pins.js';
 import { createStatsOverlay } from './stats.js';
 import { createProfile } from './profile.js';
 import { createWeatherLayer } from './weatherLayer.js';
+import { createAurora } from './aurora.js';
+import { createTerminator } from './terminator.js';
+import { createSeismicLayer } from './seismic.js';
+import { createCountryLayer } from './countries.js';
+import { createCinematic } from './cinematic.js';
+import { getSunDirection } from './sun.js';
 import { tween, updateTweens } from './tween.js';
 import { SoundManager } from './sound.js';
 
@@ -72,7 +79,12 @@ btnSound.addEventListener('click', () => {
 
 // ── Travel pins, trips, flight paths, stats, profile (Earth close-up view) ────
 const pins = createPinManager({ earthView, sound, setHint, earthHint: EARTH_HINT });
-const stats = createStatsOverlay({ getPins: pins.getPins, getTrips: pins.getTrips });
+let countries = null; // the country-fill layer (created below); stats reads its live count
+const stats = createStatsOverlay({
+  getPins: pins.getPins,
+  getTrips: pins.getTrips,
+  getCountryCount: () => (countries ? countries.visitedCountryCount() : null),
+});
 const profile = createProfile({ getCounts: pins.getCounts });
 
 btnPin.addEventListener('click', () => { sound.click(); pins.toggleMode(); });
@@ -89,6 +101,89 @@ let weatherReady = false;
 const weather = createWeatherLayer(earthView.earth, () => {
   weatherReady = true;
   if (mode === 'earth') weatherBadge.classList.add('show', 'fresh');
+});
+
+// ── Map layers: aurora, terminator, seismic, countries ───────────────────────
+const aurora = createAurora(earthView.scene);
+const terminator = createTerminator(earthView.scene); // on by default
+const seismic = createSeismicLayer(earthView.earth);
+countries = createCountryLayer(earthView.earth, { getPins: pins.getPins });
+
+let auroraOn = false;
+let seismicOn = false;
+let countriesOn = false;
+let terminatorOn = true;
+let seismicLoaded = false;
+let countriesReadyFlag = false;
+
+const seismicLive = document.getElementById('seismic-live');
+seismic.onFresh(() => { seismicLoaded = true; seismicLive.classList.add('show'); });
+countries.onReady(() => {
+  countriesReadyFlag = true;
+  if (countriesOn) { countries.rebuild(); countries.setVisible(true, true); }
+});
+// keep the country fills in sync as pins are added / edited / removed
+pins.setOnChange(() => { if (countriesReadyFlag && countriesOn) countries.rebuild(); });
+
+// ── Layers popover + toggle switches ─────────────────────────────────────────
+const btnLayers = document.getElementById('btn-layers');
+const layersPanel = document.getElementById('layers-panel');
+const swAurora = document.getElementById('sw-aurora');
+const swSeismic = document.getElementById('sw-seismic');
+const swCountries = document.getElementById('sw-countries');
+const swTerminator = document.getElementById('sw-terminator');
+
+function setSwitch(el, on) { el.classList.toggle('on', on); el.setAttribute('aria-checked', String(on)); }
+
+btnLayers.addEventListener('click', () => {
+  sound.click();
+  const open = layersPanel.classList.toggle('open');
+  layersPanel.setAttribute('aria-hidden', String(!open));
+  btnLayers.classList.toggle('active', open);
+});
+swAurora.addEventListener('click', () => { sound.click(); auroraOn = !auroraOn; aurora.setVisible(auroraOn); setSwitch(swAurora, auroraOn); });
+swTerminator.addEventListener('click', () => { sound.click(); terminatorOn = !terminatorOn; terminator.setVisible(terminatorOn); setSwitch(swTerminator, terminatorOn); });
+swSeismic.addEventListener('click', () => {
+  sound.click();
+  seismicOn = !seismicOn;
+  seismic.setVisible(seismicOn);
+  setSwitch(swSeismic, seismicOn);
+  if (seismicOn) seismic.refresh(); // fetch on first/each enable
+});
+swCountries.addEventListener('click', () => {
+  sound.click();
+  countriesOn = !countriesOn;
+  setSwitch(swCountries, countriesOn);
+  if (countriesOn) {
+    if (countriesReadyFlag) { countries.rebuild(); countries.setVisible(true, true); }
+    else countries.rebuild(); // kicks the one-time geojson fetch; onReady reveals it
+  } else {
+    countries.setVisible(false);
+  }
+});
+
+// refresh quakes every 5 minutes while the seismic layer is on
+setInterval(() => { if (seismicOn) seismic.refresh(); }, 5 * 60 * 1000);
+
+// ── Cinematic mode ───────────────────────────────────────────────────────────
+const cinematic = createCinematic({
+  earthView, sound,
+  getVisitedPins: () => pins.getPins().filter((p) => p.type === 'visited')
+    .sort((a, b) => (a.dateAdded || '').localeCompare(b.dateAdded || '')),
+});
+const btnCinematic = document.getElementById('btn-cinematic');
+btnCinematic.addEventListener('click', () => {
+  sound.click();
+  const visited = pins.getPins().filter((p) => p.type === 'visited').length;
+  if (visited < 2) {
+    btnCinematic.setAttribute('title', 'Add 2+ visited pins to unlock');
+    setHint('Add 2+ visited pins to unlock Cinematic mode');
+    setTimeout(() => { if (mode === 'earth' && !cinematic.isActive()) setHint(EARTH_HINT); }, 2200);
+    return;
+  }
+  layersPanel.classList.remove('open');
+  btnLayers.classList.remove('active');
+  cinematic.start();
 });
 
 // ── Loading screen ─────────────────────────────────────────────────────────
@@ -204,6 +299,11 @@ function goToSolar() {
   stats.close();
   profile.close();
   weatherBadge.classList.remove('show');
+  if (cinematic.isActive()) cinematic.exit();
+  layersPanel.classList.remove('open');
+  btnLayers.classList.remove('active');
+  featureCard.classList.remove('show');
+  countryTip.classList.remove('show');
   sound.whoosh();
   flyCamera(earthView, new THREE.Vector3(0, 0, 16), ORIGIN, 700); // pull away from Earth
   fade(1, 650, () => {
@@ -330,6 +430,52 @@ function pickEarthSurface(clientX, clientY) {
   return hits.length ? hits[0] : null;
 }
 
+// Raycast the live seismic markers (quakes + volcanoes) → the hit's feature data.
+function pickSeismic(clientX, clientY) {
+  ndc.x = (clientX / window.innerWidth) * 2 - 1;
+  ndc.y = -(clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(ndc, earthView.camera);
+  const hits = raycaster.intersectObjects(seismic.getClickables(), false);
+  return hits.length ? hits[0].object.userData.feature : null;
+}
+
+// ── Earthquake / volcano info card ────────────────────────────────────────────
+const featureCard = document.getElementById('feature-card');
+const featureBadge = document.getElementById('feature-badge');
+const featureTitle = document.getElementById('feature-title');
+const featureBody = document.getElementById('feature-body');
+const countryTip = document.getElementById('country-tip');
+let lastCountryHover = 0;
+
+function fbRow(label, value) { return `<div class="fb-row"><span>${label}</span><span>${value}</span></div>`; }
+function showFeature(f) {
+  if (f.kind === 'quake') {
+    featureBadge.textContent = `M ${f.mag != null ? f.mag.toFixed(1) : '?'}`;
+    featureBadge.className = 'feature-badge quake';
+    featureTitle.textContent = f.place || 'Earthquake';
+    featureBody.innerHTML =
+      fbRow('Magnitude', f.mag != null ? f.mag.toFixed(1) : '—') +
+      fbRow('Depth', (f.depthKm != null ? Math.round(f.depthKm) : '—') + ' km') +
+      fbRow('When', f.time ? new Date(f.time).toLocaleString() : '—');
+  } else {
+    featureBadge.textContent = 'Volcano';
+    featureBadge.className = 'feature-badge volcano';
+    featureTitle.textContent = f.name || 'Volcano';
+    featureBody.innerHTML =
+      fbRow('Country', f.country || '—') +
+      fbRow('Type', f.type || '—') +
+      fbRow('Elevation', (f.elevation != null ? f.elevation.toLocaleString() : '—') + ' m') +
+      fbRow('Last eruption', f.lastEruption || '—');
+  }
+  featureCard.classList.add('show');
+  featureCard.setAttribute('aria-hidden', 'false');
+  sound.chime();
+}
+document.getElementById('feature-close').addEventListener('click', () => {
+  featureCard.classList.remove('show');
+  sound.click();
+});
+
 // A tap is a press + release that barely moved (so it isn't a drag-rotate).
 let pointerDown = null;
 let longPressTimer = null;
@@ -361,6 +507,8 @@ canvas.addEventListener('pointermove', (e) => {
 canvas.addEventListener('pointercancel', clearLongPress);
 
 window.addEventListener('pointerup', (e) => {
+  // In cinematic mode, a tap anywhere exits (after a short grace period).
+  if (cinematic.isActive()) { if (cinematic.canExit()) cinematic.exit(); pointerDown = null; return; }
   const d = pointerDown;
   pointerDown = null;
   clearLongPress();
@@ -393,6 +541,10 @@ window.addEventListener('pointerup', (e) => {
     const hit = pickEarthSurface(e.clientX, e.clientY);
     if (hit) pins.openAdd(hit.point);
   } else {
+    if (seismicOn) {
+      const f = pickSeismic(e.clientX, e.clientY);
+      if (f) { showFeature(f); return; }
+    }
     const id = pins.pickPin(e.clientX, e.clientY);
     if (id) pins.openCard(id);
   }
@@ -426,11 +578,48 @@ window.addEventListener('pointermove', (e) => {
 // Hover a pin in the Earth view → grow it and show a pointer cursor.
 window.addEventListener('pointermove', (e) => {
   if (e.pointerType === 'touch') return;
-  if (!ready || mode !== 'earth' || busy()) return;
+  if (!ready || mode !== 'earth' || busy() || cinematic.isActive()) return;
   if (pins.isPinMode()) { pins.setHover(null); return; } // crosshair set on toggle
   const id = pins.pickPin(e.clientX, e.clientY);
   pins.setHover(id);
   canvas.style.cursor = id ? 'pointer' : '';
+
+  // Country hover → tooltip + outline (throttled; only when the layer is on).
+  if (countriesOn && countriesReadyFlag) {
+    const now = performance.now();
+    if (now - lastCountryHover > 80) {
+      lastCountryHover = now;
+      const hit = pickEarthSurface(e.clientX, e.clientY);
+      let info = null;
+      if (hit) {
+        const local = earthView.earth.worldToLocal(hit.point.clone());
+        const ll = latLngFromLocal(local);
+        info = countries.hoverAt(ll.lat, ll.lng);
+      } else {
+        countries.hoverAt(null, null);
+      }
+      if (info) {
+        countryTip.innerHTML = info.name + (info.pinCount ? ` · <b>${info.pinCount} pin${info.pinCount === 1 ? '' : 's'}</b>` : '');
+        countryTip.style.left = (e.clientX + 14) + 'px';
+        countryTip.style.top = (e.clientY + 14) + 'px';
+        countryTip.classList.add('show');
+      } else {
+        countryTip.classList.remove('show');
+      }
+    }
+  } else if (countryTip.classList.contains('show')) {
+    countryTip.classList.remove('show');
+  }
+});
+
+// Escape exits cinematic mode or closes the layers popover.
+window.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (cinematic.isActive()) cinematic.exit();
+  else if (layersPanel.classList.contains('open')) {
+    layersPanel.classList.remove('open');
+    btnLayers.classList.remove('active');
+  }
 });
 
 // ── Resize ───────────────────────────────────────────────────────────────────
@@ -454,10 +643,16 @@ function animate(now) {
     earthView.update(dt);
     pins.update(dt);
     weather.update(dt);
-    if (!busy()) earthView.controls.update();
+    const sun = getSunDirection();
+    aurora.update(sun, dt);
+    terminator.update(sun, earthView.camera, dt);
+    seismic.update(dt);
+    countries.update(dt);
+    if (cinematic.isActive()) cinematic.update(dt);
+    else if (!busy()) earthView.controls.update();
     renderer.render(earthView.scene, earthView.camera);
     // Pull back far enough (and not mid-task) → leave for the solar system.
-    if (ready && !busy() && !pins.panelOpen() && !stats.isOpen() && !profile.isOpen() &&
+    if (ready && !busy() && !cinematic.isActive() && !pins.panelOpen() && !stats.isOpen() && !profile.isOpen() &&
         earthView.getDistance() > EARTH_EXIT_DIST) goToSolar();
   } else {
     solarView.update(dt);

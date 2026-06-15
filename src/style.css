@@ -827,3 +827,120 @@ body {
   .stats-grid { grid-template-columns: 1fr; }
   .stat-card.span-2 { grid-column: span 1; }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Layers panel, seismic card, country tooltip, cinematic (visual layers pass)
+   ════════════════════════════════════════════════════════════════════════ */
+#earth-tools { flex-wrap: wrap; justify-content: flex-end; max-width: min(420px, calc(100vw - 80px)); }
+#btn-layers.active,
+#btn-cinematic.active {
+  background: linear-gradient(135deg, #ffd479, #f0a93a);
+  border-color: #ffd479;
+  color: #2a1c05;
+}
+
+.layers-panel {
+  position: fixed;
+  top: 74px;
+  right: 18px;
+  z-index: 27;
+  width: 232px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(10, 16, 32, 0.82);
+  border: 1px solid rgba(127, 184, 255, 0.22);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.layers-panel.open { opacity: 1; transform: none; pointer-events: auto; }
+.layers-title { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(233, 238, 252, 0.5); margin-bottom: 8px; }
+.layers-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; }
+.lr-label { font-size: 14px; color: #eef3ff; display: flex; align-items: center; gap: 7px; }
+.live-badge { display: none; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 6px; border-radius: 6px; background: rgba(0, 229, 204, 0.2); color: #7ff0e0; border: 1px solid rgba(0, 229, 204, 0.5); }
+.live-badge.show { display: inline-block; }
+.layer-switch { width: 42px; height: 24px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.08); position: relative; cursor: pointer; transition: background 0.25s ease, border-color 0.25s ease; padding: 0; flex: none; }
+.layer-switch span { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform 0.25s ease; }
+.layer-switch.on { background: linear-gradient(135deg, #4fc3f7, #7a9bff); border-color: transparent; }
+.layer-switch.on span { transform: translateX(18px); }
+
+/* Earthquake / volcano info card */
+.feature-pop {
+  position: fixed;
+  left: 22px;
+  bottom: 112px;
+  z-index: 30;
+  width: 280px;
+  max-width: calc(100vw - 44px);
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: rgba(10, 16, 32, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  color: #e9eefc;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.feature-pop.show { opacity: 1; transform: none; pointer-events: auto; }
+.feature-pop .sheet-x { top: 12px; right: 12px; width: 28px; height: 28px; font-size: 17px; }
+.feature-badge { display: inline-block; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; padding: 4px 11px; border-radius: 999px; margin-bottom: 8px; }
+.feature-badge.quake { background: rgba(255, 107, 107, 0.16); color: #ffb0a0; border: 1px solid rgba(255, 107, 107, 0.5); }
+.feature-badge.volcano { background: rgba(255, 150, 60, 0.16); color: #ffc89a; border: 1px solid rgba(255, 150, 60, 0.5); }
+.feature-pop h3 { font-family: 'Clash Display', 'Rajdhani', sans-serif; font-size: 19px; margin-bottom: 10px; padding-right: 24px; }
+.feature-body { font-size: 13.5px; line-height: 1.7; color: rgba(233, 238, 252, 0.85); }
+.feature-body .fb-row { display: flex; justify-content: space-between; gap: 12px; }
+.feature-body .fb-row span:first-child { color: rgba(233, 238, 252, 0.5); }
+
+/* Country hover tooltip */
+.country-tip {
+  position: fixed;
+  z-index: 40;
+  pointer-events: none;
+  padding: 7px 12px;
+  border-radius: 10px;
+  background: rgba(10, 16, 32, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 13px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease;
+}
+.country-tip.show { opacity: 1; transform: none; }
+.country-tip b { color: #ffce6a; }
+
+/* Cinematic overlay */
+.cinematic { position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0; transition: opacity 0.6s ease; }
+.cinematic.on { opacity: 1; }
+.cine-title { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; opacity: 0; transition: opacity 0.8s ease; max-width: 80vw; }
+.cine-title.show { opacity: 1; }
+.cine-title .ct-name { display: block; font-family: 'Clash Display', 'Rajdhani', sans-serif; font-weight: 300; font-size: clamp(32px, 6vw, 64px); letter-spacing: 0.18em; text-transform: uppercase; color: #fff; text-shadow: 0 2px 30px rgba(0, 0, 0, 0.6); }
+.cine-title .ct-note { display: block; margin-top: 14px; font-size: 16px; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.82); }
+.cine-hint { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); }
+body.cinematic-on #earth-tools,
+body.cinematic-on #pin-stats,
+body.cinematic-on #weather-badge,
+body.cinematic-on #brand,
+body.cinematic-on #btn-sound,
+body.cinematic-on #hint,
+body.cinematic-on #layers-panel {
+  opacity: 0.1 !important;
+  pointer-events: none !important;
+  transition: opacity 0.5s ease;
+}
+
+@media (max-width: 640px) {
+  .layers-panel { top: 120px; right: 14px; }
+  .feature-pop { bottom: 100px; left: 14px; }
+}
