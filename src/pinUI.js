@@ -1,18 +1,26 @@
-import { createPinLayer } from './pins.js';
+import * as THREE from 'three';
+import { createPinLayer, localFromLatLng } from './pins.js';
+import { createFlightLayer } from './flightPaths.js';
+import { tween } from './tween.js';
 
-// Ties together: the 3D pin layer, localStorage persistence, reverse-geocoding,
-// photo compression, and all the DOM panels (Add/Edit sheet, info card, the
-// pin-mode button, and the live stats counter). main.js just routes pointer
-// events and calls update() each frame.
+// Ties together: the 3D pin layer, trip collections, flight-path arcs,
+// localStorage persistence, reverse-geocoding, photo compression, and all the
+// DOM panels (Add/Edit sheet, info card, trips panel, the tool buttons, and the
+// live stats counter). main.js routes pointer events and calls update().
 
 const KEY = 'wanderglobe_pins';
+const TRIPS_KEY = 'wanderglobe_trips';
 const MAX_PHOTO_LEN = 270000; // ~200 KB once base64-encoded
 
 const $ = (id) => document.getElementById(id);
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-function genId() {
-  return 'pin_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+function genId(prefix) {
+  return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
 function fmtCoords(lat, lng) {
@@ -29,7 +37,6 @@ function fmtDate(iso) {
   }
 }
 
-// Free reverse geocoding, no API key. Returns "City, Country" (best effort).
 async function reverseGeocode(lat, lng) {
   try {
     const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`;
@@ -43,8 +50,6 @@ async function reverseGeocode(lat, lng) {
   }
 }
 
-// Downscale + JPEG-compress an uploaded image until it fits the storage budget,
-// returning a base64 data URL.
 function compressImage(file) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -90,10 +95,13 @@ function compressImage(file) {
 export function createPinManager({ earthView, sound, setHint, earthHint }) {
   const earthMesh = earthView.earth;
   const layer = createPinLayer(earthMesh);
+  const flights = createFlightLayer(earthMesh);
 
-  // DOM
+  // DOM — pins
   const btnPin = $('btn-pin');
+  const btnFlights = $('btn-flights');
   const statsEl = $('pin-stats');
+  const earthTools = $('earth-tools');
   const panel = $('pin-panel');
   const card = $('pin-card');
 
@@ -102,6 +110,7 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
   const nameInput = $('pin-name');
   const noteInput = $('pin-note');
   const noteCount = $('pin-note-count');
+  const tripSelect = $('pin-trip');
   const photoInput = $('pin-photo-input');
   const photoBtn = $('pin-photo-btn');
   const photoPreview = $('pin-photo-preview');
@@ -116,8 +125,18 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
   const cardDate = $('pin-card-date');
   const deleteConfirm = $('pin-delete-confirm');
 
+  // DOM — trips
+  const tripsPanel = $('trips-panel');
+  const tripsList = $('trips-list');
+  const tripsEmpty = $('trips-empty');
+  const tripsForm = $('trips-form');
+  const tripNameInput = $('trip-name');
+  const tripEmojiBtns = [...document.querySelectorAll('.emoji-opt')];
+  const tripColourBtns = [...document.querySelectorAll('.swatch')];
+
   // State
-  let store = load();
+  let store = load(KEY);
+  let trips = load(TRIPS_KEY);
   let pinMode = false;
   let editingId = null;
   let cardId = null;
@@ -125,14 +144,24 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
   let currentType = 'visited';
   let currentPhoto = null;
   let geoToken = 0;
+  let selectedTripId = null;
+  let newTripEmoji = '✈️';
+  let newTripColour = '#ffce6a';
+  let flightsOn = false;
 
-  store.forEach((p) => layer.addPin(p));
+  // initial render
+  store.forEach((p) => layer.addPin(renderData(p)));
   renderStats();
+  rebuildFlights();
+  flightsOn = visitedCount() >= 3;
+  flights.setVisible(flightsOn, false);
+  btnFlights.classList.toggle('active', flightsOn);
+  btnFlights.setAttribute('aria-pressed', String(flightsOn));
 
   // ── Persistence ────────────────────────────────────────────────────────────
-  function load() {
+  function load(key) {
     try {
-      const a = JSON.parse(localStorage.getItem(KEY));
+      const a = JSON.parse(localStorage.getItem(key));
       if (Array.isArray(a)) return a;
     } catch (e) {}
     return [];
@@ -145,6 +174,22 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
       return false;
     }
   }
+  function persistTrips() {
+    try { localStorage.setItem(TRIPS_KEY, JSON.stringify(trips)); } catch (e) {}
+  }
+
+  function tripColorFor(tripId) {
+    const t = trips.find((x) => x.id === tripId);
+    return t ? t.colour : null;
+  }
+  // The object handed to the 3D layer carries a derived tripColor (never stored).
+  function renderData(pin) {
+    return { ...pin, tripColor: tripColorFor(pin.tripId) };
+  }
+
+  function visitedCount() {
+    return store.filter((p) => p.type === 'visited').length;
+  }
 
   function renderStats() {
     let visited = 0;
@@ -153,12 +198,23 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     statsEl.innerHTML = `<b class="v">${visited}</b> visited · <b class="w">${wishlist}</b> wishlist`;
   }
 
+  // ── Flight paths ──────────────────────────────────────────────────────────────
+  function rebuildFlights() {
+    flights.rebuild(store.filter((p) => p.type === 'visited').map((p) => ({ lat: p.lat, lng: p.lng })));
+  }
+  function toggleFlights() {
+    flightsOn = !flightsOn;
+    flights.setVisible(flightsOn, true);
+    btnFlights.classList.toggle('active', flightsOn);
+    btnFlights.setAttribute('aria-pressed', String(flightsOn));
+  }
+
   // ── Pin mode + chrome ────────────────────────────────────────────────────────
   function setPinMode(on) {
     pinMode = on;
     btnPin.classList.toggle('active', on);
     btnPin.setAttribute('aria-pressed', String(on));
-    earthView.setSpin(!on); // pause the auto-spin while aiming
+    earthView.setSpin(!on);
     earthView.canvas.style.cursor = on ? 'crosshair' : '';
     setHint(on ? 'Tap anywhere on Earth to drop a pin' : earthHint);
   }
@@ -171,17 +227,23 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
   }
 
   function showChrome() {
-    btnPin.classList.add('visible');
+    earthTools.classList.add('visible');
     statsEl.classList.add('visible');
   }
   function hideChrome() {
-    btnPin.classList.remove('visible');
+    earthTools.classList.remove('visible');
     statsEl.classList.remove('visible');
     if (pinMode) setPinMode(false);
     closePanels();
   }
 
   // ── Add / Edit sheet ──────────────────────────────────────────────────────────
+  function populateTripSelect(selectedId) {
+    tripSelect.innerHTML = '<option value="">None</option>' +
+      trips.map((t) => `<option value="${t.id}">${t.emoji} ${escapeHtml(t.name)}</option>`).join('');
+    tripSelect.value = selectedId || '';
+  }
+
   function resetForm() {
     statusEl.textContent = '';
     nameInput.value = '';
@@ -212,7 +274,6 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     }
   }
 
-  // Open the Add sheet for a fresh surface point.
   function openAdd(worldPoint) {
     const { lat, lng } = layer.latLngFromWorld(worldPoint);
     editingId = null;
@@ -221,6 +282,7 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
 
     resetForm();
     applyType('visited');
+    populateTripSelect('');
     titleEl.textContent = 'Add Pin';
     coordsEl.textContent = fmtCoords(lat, lng);
     nameInput.placeholder = 'Locating…';
@@ -230,23 +292,23 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
 
     const token = ++geoToken;
     reverseGeocode(lat, lng).then((name) => {
-      if (token !== geoToken) return;           // a newer open superseded this
+      if (token !== geoToken) return;
       nameInput.placeholder = 'Place name';
       if (!nameInput.value && name) nameInput.value = name;
     });
   }
 
-  // Open the Add sheet pre-filled to edit an existing pin.
   function openEdit(id) {
     const pin = store.find((p) => p.id === id);
     if (!pin) return;
     editingId = id;
-    geoToken++; // cancel any pending geocode
+    geoToken++;
     pendingLatLng = { lat: pin.lat, lng: pin.lng };
     layer.clearPending();
 
     resetForm();
     applyType(pin.type);
+    populateTripSelect(pin.tripId || '');
     titleEl.textContent = 'Edit Pin';
     coordsEl.textContent = fmtCoords(pin.lat, pin.lng);
     nameInput.placeholder = 'Place name';
@@ -264,6 +326,7 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
   function save() {
     const name = nameInput.value.trim() || 'Untitled place';
     const note = noteInput.value.trim().slice(0, 100);
+    const tripId = tripSelect.value || null;
 
     if (editingId) {
       const pin = store.find((p) => p.id === editingId);
@@ -272,22 +335,23 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
       pin.name = name;
       pin.note = note;
       pin.type = currentType;
+      pin.tripId = tripId;
       pin.photoBase64 = currentPhoto || null;
-      layer.updatePin(pin);
+      layer.updatePin(renderData(pin));
       if (!persist()) {
-        Object.assign(pin, prev); // roll back
-        layer.updatePin(pin);
+        Object.assign(pin, prev);
+        layer.updatePin(renderData(pin));
         statusEl.textContent = 'Storage full — try a smaller photo.';
         return;
       }
     } else {
       const { lat, lng } = pendingLatLng;
       const pin = {
-        id: genId(), name, lat, lng, type: currentType,
+        id: genId('pin_'), name, lat, lng, type: currentType, tripId,
         note, photoBase64: currentPhoto || null, dateAdded: new Date().toISOString(),
       };
       store.push(pin);
-      layer.addPin(pin);
+      layer.addPin(renderData(pin));
       if (!persist()) {
         store.pop();
         layer.removePin(pin.id);
@@ -298,6 +362,9 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
 
     layer.clearPending();
     renderStats();
+    rebuildFlights();
+    if (selectedTripId) layer.setHighlight(selectedTripId);
+    if (tripsPanel.classList.contains('open')) renderTripsList();
     closeSheet(panel);
     editingId = null;
     sound.chime();
@@ -320,14 +387,16 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     cardName.textContent = pin.name;
     cardBadge.textContent = pin.type === 'wishlist' ? 'Wishlist' : 'Visited';
     cardBadge.className = 'pin-badge ' + (pin.type === 'wishlist' ? 'wishlist' : 'visited');
-    cardPhoto.innerHTML = pin.photoBase64 ? `<img src="${pin.photoBase64}" alt="${pin.name}" />` : '';
+    cardPhoto.innerHTML = pin.photoBase64 ? `<img src="${pin.photoBase64}" alt="${escapeHtml(pin.name)}" />` : '';
     cardPhoto.style.display = pin.photoBase64 ? 'block' : 'none';
     cardNote.textContent = pin.note || '';
     cardNote.style.display = pin.note ? 'block' : 'none';
     cardCoords.textContent = fmtCoords(pin.lat, pin.lng);
-    cardDate.textContent = pin.dateAdded ? `Added ${fmtDate(pin.dateAdded)}` : '';
+    const trip = trips.find((t) => t.id === pin.tripId);
+    cardDate.textContent = (pin.dateAdded ? `Added ${fmtDate(pin.dateAdded)}` : '') + (trip ? `  ·  ${trip.emoji} ${trip.name}` : '');
 
     closeSheet(panel);
+    closeSheet(tripsPanel);
     openSheet(card);
     sound.click();
   }
@@ -338,20 +407,131 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     store = store.filter((p) => p.id !== cardId);
     persist();
     renderStats();
+    rebuildFlights();
     cardId = null;
     closeSheet(card);
     sound.click();
   }
 
+  // ── Trips ─────────────────────────────────────────────────────────────────────
+  function openTrips() {
+    if (tripsPanel.classList.contains('open')) { closeSheet(tripsPanel); clearHighlight(); return; }
+    closeSheet(panel);
+    closeSheet(card);
+    tripsForm.hidden = true;
+    renderTripsList();
+    openSheet(tripsPanel);
+    sound.click();
+  }
+
+  function renderTripsList() {
+    tripsList.innerHTML = '';
+    tripsEmpty.style.display = trips.length ? 'none' : 'block';
+    for (const t of trips) {
+      const ps = store.filter((p) => p.tripId === t.id);
+      const dates = ps.map((p) => p.dateAdded).filter(Boolean).sort();
+      const range = dates.length ? `${fmtDate(dates[0])} – ${fmtDate(dates[dates.length - 1])}` : 'No pins yet';
+      let thumbs = '';
+      ps.slice(0, 4).forEach((p) => {
+        thumbs += p.photoBase64
+          ? `<span class="trip-thumb" style="background-image:url('${p.photoBase64}')"></span>`
+          : `<span class="trip-thumb initials">${escapeHtml((p.name || '?').slice(0, 2).toUpperCase())}</span>`;
+      });
+      const el = document.createElement('div');
+      el.className = 'trip-card' + (selectedTripId === t.id ? ' selected' : '');
+      el.style.setProperty('--tc', t.colour);
+      el.innerHTML =
+        `<button class="trip-del" data-id="${t.id}" aria-label="Delete trip">×</button>` +
+        `<div class="trip-head"><span class="trip-emoji-badge">${t.emoji}</span><span class="trip-name">${escapeHtml(t.name)}</span></div>` +
+        `<div class="trip-meta">${ps.length} pin${ps.length === 1 ? '' : 's'} · ${range}</div>` +
+        `<div class="trip-thumbs">${thumbs}</div>`;
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('.trip-del')) return;
+        selectTrip(t.id);
+      });
+      tripsList.appendChild(el);
+    }
+    tripsList.querySelectorAll('.trip-del').forEach((b) =>
+      b.addEventListener('click', () => deleteTrip(b.dataset.id)));
+  }
+
+  function clearHighlight() {
+    selectedTripId = null;
+    layer.setHighlight(null);
+  }
+
+  function selectTrip(id) {
+    if (selectedTripId === id) {
+      clearHighlight();
+    } else {
+      selectedTripId = id;
+      layer.setHighlight(id);
+      const trip = trips.find((t) => t.id === id);
+      if (trip) flyToTrip(trip);
+    }
+    renderTripsList();
+    sound.click();
+  }
+
+  function deleteTrip(id) {
+    trips = trips.filter((t) => t.id !== id);
+    let touched = false;
+    for (const p of store) {
+      if (p.tripId === id) { p.tripId = null; layer.updatePin(renderData(p)); touched = true; }
+    }
+    if (touched) persist();
+    persistTrips();
+    if (selectedTripId === id) clearHighlight();
+    renderTripsList();
+    sound.click();
+  }
+
+  function createTrip() {
+    const name = tripNameInput.value.trim();
+    if (!name) { tripNameInput.classList.add('error'); setTimeout(() => tripNameInput.classList.remove('error'), 1200); return; }
+    trips.push({ id: genId('trip_'), name, emoji: newTripEmoji, colour: newTripColour, createdAt: new Date().toISOString() });
+    persistTrips();
+    tripsForm.hidden = true;
+    tripNameInput.value = '';
+    renderTripsList();
+    sound.chime();
+  }
+
+  // Spin the globe so the trip's pins face the camera (auto-spin pauses, then resumes).
+  function flyToTrip(trip) {
+    const ps = store.filter((p) => p.tripId === trip.id);
+    if (!ps.length) return;
+    const local = new THREE.Vector3();
+    for (const p of ps) local.add(localFromLatLng(p.lat, p.lng, 1));
+    if (local.lengthSq() < 1e-6) return;
+    local.normalize();
+    const localAngle = Math.atan2(local.x, local.z);
+    const camDir = earthView.camera.position.clone().normalize();
+    const camAngle = Math.atan2(camDir.x, camDir.z);
+    const cur = earthMesh.rotation.y;
+    const delta = Math.atan2(Math.sin(camAngle - localAngle - cur), Math.cos(camAngle - localAngle - cur));
+    earthView.setSpin(false);
+    tween({
+      duration: 1100,
+      onUpdate: (k) => { earthMesh.rotation.y = cur + delta * k; },
+      onComplete: () => earthView.setSpin(true),
+    });
+  }
+
   // ── Sheet open/close ───────────────────────────────────────────────────────────
   function openSheet(el) { el.classList.add('open'); }
   function closeSheet(el) { el.classList.remove('open'); }
-  function panelOpen() { return panel.classList.contains('open') || card.classList.contains('open'); }
+  function panelOpen() {
+    return panel.classList.contains('open') || card.classList.contains('open') || tripsPanel.classList.contains('open');
+  }
   function closePanels() {
     closeSheet(panel);
     closeSheet(card);
+    closeSheet(tripsPanel);
     deleteConfirm.classList.remove('show');
+    tripsForm.hidden = true;
     layer.clearPending();
+    clearHighlight();
     editingId = null;
     cardId = null;
   }
@@ -372,7 +552,7 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
       statusEl.textContent = "Couldn't read that image.";
       renderPhotoPreview();
     }
-    photoInput.value = ''; // allow re-picking the same file
+    photoInput.value = '';
   });
 
   $('pin-save').addEventListener('click', save);
@@ -384,14 +564,36 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
   $('pin-delete-no').addEventListener('click', () => { deleteConfirm.classList.remove('show'); });
   $('pin-delete-yes').addEventListener('click', doDelete);
 
+  // trips panel controls
+  $('trips-close').addEventListener('click', () => { closeSheet(tripsPanel); clearHighlight(); sound.click(); });
+  $('trips-new').addEventListener('click', () => { tripsForm.hidden = !tripsForm.hidden; if (!tripsForm.hidden) tripNameInput.focus(); });
+  $('trip-cancel').addEventListener('click', () => { tripsForm.hidden = true; });
+  tripsForm.addEventListener('submit', (e) => { e.preventDefault(); createTrip(); });
+  tripEmojiBtns.forEach((b) => b.addEventListener('click', () => {
+    newTripEmoji = b.dataset.emoji;
+    tripEmojiBtns.forEach((x) => x.classList.toggle('active', x === b));
+  }));
+  tripColourBtns.forEach((b) => b.addEventListener('click', () => {
+    newTripColour = b.dataset.colour;
+    tripColourBtns.forEach((x) => x.classList.toggle('active', x === b));
+  }));
+
   function pickPin(clientX, clientY) {
     return layer.pickPin(earthView.camera, clientX, clientY, window.innerWidth, window.innerHeight);
   }
 
   return {
-    update: (dt) => layer.update(dt),
+    update: (dt) => { layer.update(dt); flights.update(dt); },
     toggleMode, isPinMode, panelOpen,
     showChrome, hideChrome, closePanels,
     pickPin, openAdd, openCard, openEdit,
+    toggleFlights, openTrips,
+    getPins: () => store,
+    getTrips: () => trips,
+    getCounts: () => {
+      let visited = 0; let wishlist = 0;
+      for (const p of store) (p.type === 'wishlist' ? wishlist++ : visited++);
+      return { visited, wishlist, trips: trips.length };
+    },
   };
 }

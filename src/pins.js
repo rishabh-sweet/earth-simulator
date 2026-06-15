@@ -73,16 +73,47 @@ function ringTexture(rgb) {
   return t;
 }
 
+// A thin white ring (tinted per-trip via material.color) drawn around pins that
+// belong to a trip collection.
+function tripRingTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(32, 32, 24, 0, Math.PI * 2);
+  ctx.stroke();
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
 export function createPinLayer(earthMesh) {
   const group = new THREE.Group();
   earthMesh.add(group);
 
   const goldTex = dotTexture('255,196,84');   // Visited
   const blueTex = ringTexture('120,180,255');  // Wishlist
-  const pins = new Map(); // id → { data, sprite }
+  const tripRingTex = tripRingTexture();       // tinted per trip
+  const pins = new Map(); // id → { data, sprite, ring, dim }
   let pending = null;     // placement marker sprite while the Add panel is open
   let hoverId = null;
+  let highlightTrip = null; // when set, only this trip's pins stay bright
   let clock = 0;
+
+  // A tinted ring sprite sitting just behind a pin, marking its trip colour.
+  function makeRing(color) {
+    const ring = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: tripRingTex,
+      color: new THREE.Color(color),
+      transparent: true,
+      depthTest: true,
+      depthWrite: false,
+    }));
+    ring.scale.setScalar(BASE * 1.9);
+    return ring;
+  }
 
   function spriteFor(type) {
     const mat = new THREE.SpriteMaterial({
@@ -97,20 +128,42 @@ export function createPinLayer(earthMesh) {
     return s;
   }
 
+  // `data.tripColor` (a hex string) is supplied by the manager when the pin
+  // belongs to a trip; null/undefined means no ring.
   function addPin(data) {
+    const pos = localFromLatLng(data.lat, data.lng);
     const sprite = spriteFor(data.type);
-    sprite.position.copy(localFromLatLng(data.lat, data.lng));
+    sprite.position.copy(pos);
     group.add(sprite);
-    pins.set(data.id, { data, sprite });
+    let ring = null;
+    if (data.tripColor) {
+      ring = makeRing(data.tripColor);
+      ring.position.copy(pos);
+      group.add(ring);
+    }
+    pins.set(data.id, { data, sprite, ring, dim: 1 });
   }
 
   function updatePin(data) {
     const rec = pins.get(data.id);
     if (!rec) return;
     rec.data = data;
+    const pos = localFromLatLng(data.lat, data.lng);
     rec.sprite.material.map = data.type === 'wishlist' ? blueTex : goldTex;
     rec.sprite.material.needsUpdate = true;
-    rec.sprite.position.copy(localFromLatLng(data.lat, data.lng));
+    rec.sprite.position.copy(pos);
+    // sync the trip ring
+    if (data.tripColor && !rec.ring) {
+      rec.ring = makeRing(data.tripColor);
+      group.add(rec.ring);
+    } else if (!data.tripColor && rec.ring) {
+      group.remove(rec.ring);
+      rec.ring.material.dispose();
+      rec.ring = null;
+    } else if (data.tripColor && rec.ring) {
+      rec.ring.material.color.set(data.tripColor);
+    }
+    if (rec.ring) rec.ring.position.copy(pos);
   }
 
   function removePin(id) {
@@ -118,8 +171,17 @@ export function createPinLayer(earthMesh) {
     if (!rec) return;
     group.remove(rec.sprite);
     rec.sprite.material.dispose();
+    if (rec.ring) { group.remove(rec.ring); rec.ring.material.dispose(); }
     pins.delete(id);
     if (hoverId === id) hoverId = null;
+  }
+
+  // When a trip is highlighted, its pins stay fully opaque and all others dim.
+  function setHighlight(tripId) {
+    highlightTrip = tripId;
+    for (const [, rec] of pins) {
+      rec.dim = (tripId == null || rec.data.tripId === tripId) ? 1 : 0.2;
+    }
   }
 
   // The pulsing marker shown at the chosen spot while the Add panel is open.
@@ -195,13 +257,18 @@ export function createPinLayer(earthMesh) {
       if (rec.data.type !== 'wishlist') s = BASE * pulse; // visited pins breathe
       if (id === hoverId) s *= HOVER;
       rec.sprite.scale.setScalar(s);
+      rec.sprite.material.opacity = rec.dim;
+      if (rec.ring) {
+        rec.ring.scale.setScalar(s * 1.9);
+        rec.ring.material.opacity = rec.dim;
+      }
     }
     if (pending) pending.scale.setScalar(BASE * (1.15 + Math.sin(clock * 5) * 0.18));
   }
 
   return {
     group, addPin, updatePin, removePin,
-    setPending, clearPending,
+    setPending, clearPending, setHighlight,
     latLngFromWorld, pickPin, setHover, count, update,
   };
 }

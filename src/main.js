@@ -3,6 +3,9 @@ import { createEarthView } from './earthView.js';
 import { createSolarView } from './solarView.js';
 import { createInfoPanel } from './infoPanel.js';
 import { createPinManager } from './pinUI.js';
+import { createStatsOverlay } from './stats.js';
+import { createProfile } from './profile.js';
+import { createWeatherLayer } from './weatherLayer.js';
 import { tween, updateTweens } from './tween.js';
 import { SoundManager } from './sound.js';
 
@@ -67,9 +70,26 @@ btnSound.addEventListener('click', () => {
   btnSound.setAttribute('aria-pressed', String(on));
 });
 
-// ── Travel pins (Earth close-up view) ────────────────────────────────────────
+// ── Travel pins, trips, flight paths, stats, profile (Earth close-up view) ────
 const pins = createPinManager({ earthView, sound, setHint, earthHint: EARTH_HINT });
+const stats = createStatsOverlay({ getPins: pins.getPins, getTrips: pins.getTrips });
+const profile = createProfile({ getCounts: pins.getCounts });
+
 btnPin.addEventListener('click', () => { sound.click(); pins.toggleMode(); });
+document.getElementById('btn-flights').addEventListener('click', () => { sound.click(); pins.toggleFlights(); });
+document.getElementById('btn-trips').addEventListener('click', () => { sound.click(); pins.openTrips(); });
+document.getElementById('btn-stats').addEventListener('click', () => { sound.click(); stats.open(); });
+// (the profile avatar button wires itself up inside profile.js)
+
+// ── Live weather overlay (RainViewer radar tiles) ────────────────────────────
+// Wraps the Earth in real precipitation/cloud data; the badge pulses when fresh.
+// Falls back silently to the static cloud layer if the API/tiles are unavailable.
+const weatherBadge = document.getElementById('weather-badge');
+let weatherReady = false;
+const weather = createWeatherLayer(earthView.earth, () => {
+  weatherReady = true;
+  if (mode === 'earth') weatherBadge.classList.add('show', 'fresh');
+});
 
 // ── Loading screen ─────────────────────────────────────────────────────────
 // Hold the globe behind a full-screen loader until every texture is in, then
@@ -181,6 +201,9 @@ function goToSolar() {
   transitioning = true;
   earthView.controls.enabled = false;
   pins.hideChrome(); // exits pin mode, closes any open sheet, hides the tally
+  stats.close();
+  profile.close();
+  weatherBadge.classList.remove('show');
   sound.whoosh();
   flyCamera(earthView, new THREE.Vector3(0, 0, 16), ORIGIN, 700); // pull away from Earth
   fade(1, 650, () => {
@@ -218,6 +241,7 @@ function goToEarth() {
     earthView.reset();
     earthView.controls.enabled = false;
     pins.showChrome();
+    if (weatherReady) weatherBadge.classList.add('show');
     setHint(EARTH_HINT);
     fade(0, 800, () => {
       transitioning = false;
@@ -429,10 +453,12 @@ function animate(now) {
   if (mode === 'earth') {
     earthView.update(dt);
     pins.update(dt);
+    weather.update(dt);
     if (!busy()) earthView.controls.update();
     renderer.render(earthView.scene, earthView.camera);
-    // Pull back far enough (and not mid-pin) → leave for the solar system.
-    if (ready && !busy() && !pins.panelOpen() && earthView.getDistance() > EARTH_EXIT_DIST) goToSolar();
+    // Pull back far enough (and not mid-task) → leave for the solar system.
+    if (ready && !busy() && !pins.panelOpen() && !stats.isOpen() && !profile.isOpen() &&
+        earthView.getDistance() > EARTH_EXIT_DIST) goToSolar();
   } else {
     solarView.update(dt);
     if (!busy()) solarView.controls.update();

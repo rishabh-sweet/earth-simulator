@@ -81,16 +81,40 @@
     <button id="btn-earth" class="ui-btn">⌂ Earth view</button>
     <div id="hint"></div>
 
-    <!-- Pin-mode toggle (top-right; only in the Earth close-up view) -->
-    <button id="btn-pin" class="ui-icon pin-toggle" aria-label="Toggle pin mode" aria-pressed="false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z" />
-        <circle cx="12" cy="10" r="2.6" />
-      </svg>
-    </button>
+    <!-- Earth-view tool cluster (top-right; only in the Earth close-up view) -->
+    <div id="earth-tools">
+      <button id="btn-flights" class="ui-icon" aria-label="Toggle flight paths" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 2 11 13" />
+          <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+        </svg>
+      </button>
+      <button id="btn-trips" class="ui-icon" aria-label="My trips">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 7a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+        </svg>
+      </button>
+      <button id="btn-stats" class="ui-icon" aria-label="My stats">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 20V11M12 20V4M19 20v-6M3 20h18" />
+        </svg>
+      </button>
+      <button id="btn-pin" class="ui-icon pin-toggle" aria-label="Toggle pin mode" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z" />
+          <circle cx="12" cy="10" r="2.6" />
+        </svg>
+      </button>
+      <button id="btn-profile" class="profile-btn" aria-label="Profile">
+        <span id="profile-avatar" class="profile-avatar"></span>
+      </button>
+    </div>
 
     <!-- Live pin tally (bottom-left; Earth view) -->
     <div id="pin-stats"></div>
+
+    <!-- Live weather badge (bottom-left; pulses when fresh data lands) -->
+    <div id="weather-badge" aria-hidden="true"><span class="wb-icon">🌤</span> Live Weather</div>
 
     <!-- Add / Edit pin sheet (slides in from the right) -->
     <div id="pin-panel" class="pin-sheet">
@@ -110,6 +134,11 @@
           <button type="button" id="pin-type-visited" class="type-opt active" data-type="visited">● Visited</button>
           <button type="button" id="pin-type-wishlist" class="type-opt" data-type="wishlist">○ Wishlist</button>
         </div>
+
+        <label for="pin-trip">Add to trip</label>
+        <select id="pin-trip" class="pin-select">
+          <option value="">None</option>
+        </select>
 
         <label>Photo</label>
         <div class="pin-photo">
@@ -146,6 +175,103 @@
           <button type="button" id="pin-delete-yes" class="btn-danger-sm">Delete</button>
           <button type="button" id="pin-delete-no" class="btn-ghost-sm">Keep</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Trips panel (slides in from the right) -->
+    <div id="trips-panel" class="pin-sheet">
+      <div class="pin-sheet-inner">
+        <button id="trips-close" class="sheet-x" aria-label="Close">×</button>
+        <h2>My Trips</h2>
+        <button type="button" id="trips-new" class="btn-ghost full">+ New Trip</button>
+
+        <form id="trips-form" class="trips-form" hidden>
+          <label for="trip-name">Trip name</label>
+          <input id="trip-name" type="text" maxlength="40" placeholder="Summer in Japan" autocomplete="off" />
+          <label>Emoji</label>
+          <div id="trip-emoji" class="emoji-row">
+            <button type="button" class="emoji-opt active" data-emoji="✈️">✈️</button>
+            <button type="button" class="emoji-opt" data-emoji="🏖️">🏖️</button>
+            <button type="button" class="emoji-opt" data-emoji="🏔️">🏔️</button>
+            <button type="button" class="emoji-opt" data-emoji="🌆">🌆</button>
+            <button type="button" class="emoji-opt" data-emoji="🍜">🍜</button>
+            <button type="button" class="emoji-opt" data-emoji="🎒">🎒</button>
+          </div>
+          <label>Colour</label>
+          <div id="trip-colour" class="swatch-row">
+            <button type="button" class="swatch active" data-colour="#ffce6a" style="--sw:#ffce6a"></button>
+            <button type="button" class="swatch" data-colour="#7fb8ff" style="--sw:#7fb8ff"></button>
+            <button type="button" class="swatch" data-colour="#ff6b8a" style="--sw:#ff6b8a"></button>
+            <button type="button" class="swatch" data-colour="#00e5cc" style="--sw:#00e5cc"></button>
+            <button type="button" class="swatch" data-colour="#c49bff" style="--sw:#c49bff"></button>
+          </div>
+          <div class="pin-actions">
+            <button type="submit" id="trip-save" class="btn-primary">Create Trip</button>
+            <button type="button" id="trip-cancel" class="btn-ghost">Cancel</button>
+          </div>
+        </form>
+
+        <div id="trips-list" class="trips-list"></div>
+        <p id="trips-empty" class="trips-empty">No trips yet. Group your pins into journeys.</p>
+      </div>
+    </div>
+
+    <!-- Travel stats overlay (full-screen glass) -->
+    <div id="stats-overlay" class="stats-overlay">
+      <button id="stats-close" class="sheet-x" aria-label="Close">×</button>
+      <div class="stats-overlay-inner">
+        <p class="stats-eyebrow">Your travel universe</p>
+        <h2 class="stats-title">Travel Stats</h2>
+
+        <div class="travel-score">
+          <span class="score-num" id="score-num">0</span><span class="score-max">/ 1000</span>
+          <span class="score-rank" id="score-rank">Explorer</span>
+        </div>
+
+        <div class="stats-grid" id="stats-grid"></div>
+
+        <div class="stats-share-row">
+          <button type="button" id="stats-share" class="btn-primary">Share my stats</button>
+          <span id="stats-share-note" class="stats-share-note"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile panel (slides in from the right) -->
+    <div id="profile-panel" class="pin-sheet">
+      <div class="pin-sheet-inner">
+        <button id="profile-close" class="sheet-x" aria-label="Close">×</button>
+        <div class="profile-head">
+          <div id="profile-avatar-lg" class="profile-avatar-lg"></div>
+          <h2 id="profile-name">Traveller</h2>
+          <div id="profile-hometown" class="profile-sub"></div>
+        </div>
+        <p id="profile-bio" class="profile-bio"></p>
+        <div id="profile-since" class="profile-since"></div>
+        <div id="profile-quickstats" class="profile-quickstats"></div>
+
+        <div class="profile-link">
+          <label>My public link</label>
+          <div id="profile-public-link" class="public-link"></div>
+          <span class="public-link-note">Coming soon — share your globe with anyone.</span>
+        </div>
+
+        <button type="button" id="profile-edit" class="btn-ghost full">Edit Profile</button>
+
+        <form id="profile-form" class="profile-form" hidden>
+          <label>Avatar</label>
+          <input id="profile-avatar-input" type="file" accept="image/*" hidden />
+          <button type="button" id="profile-avatar-btn" class="photo-btn">Choose photo…</button>
+          <div id="profile-avatar-preview" class="photo-preview"></div>
+          <label for="profile-hometown-input">Hometown</label>
+          <input id="profile-hometown-input" type="text" maxlength="40" placeholder="London, UK" autocomplete="off" />
+          <label for="profile-bio-input">Bio <span class="muted">(<span id="profile-bio-count">0</span>/120)</span></label>
+          <input id="profile-bio-input" type="text" maxlength="120" placeholder="Forever chasing sunsets and street food." autocomplete="off" />
+          <div class="pin-actions">
+            <button type="button" id="profile-save" class="btn-primary">Save</button>
+            <button type="button" id="profile-cancel" class="btn-ghost">Cancel</button>
+          </div>
+        </form>
       </div>
     </div>
 
