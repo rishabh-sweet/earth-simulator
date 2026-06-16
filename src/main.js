@@ -3,9 +3,15 @@ import { createEarthView } from './earthView.js';
 import { createSolarView } from './solarView.js';
 import { createInfoPanel } from './infoPanel.js';
 import { createPinManager } from './pinUI.js';
-import { latLngFromLocal } from './pins.js';
+import { latLngFromLocal, localFromLatLng } from './pins.js';
 import { createStatsOverlay } from './stats.js';
 import { createProfile } from './profile.js';
+import { createTripPlanner } from './tripPlanner.js';
+import { createVisaChecker } from './visa.js';
+import { createChallenges } from './challenges.js';
+import { createSurprise } from './surprise.js';
+import { createAISuggester } from './aiSuggest.js';
+import { createYearReview } from './yearReview.js';
 import { createWeatherLayer } from './weatherLayer.js';
 import { createAurora } from './aurora.js';
 import { createTerminator } from './terminator.js';
@@ -122,8 +128,10 @@ countries.onReady(() => {
   countriesReadyFlag = true;
   if (countriesOn) { countries.rebuild(); countries.setVisible(true, true); }
 });
-// keep the country fills in sync as pins are added / edited / removed
-pins.setOnChange(() => { if (countriesReadyFlag && countriesOn) countries.rebuild(); });
+// Fan a single pin-change event out to every interested subsystem (country
+// fills, challenge checks, trip-planner waypoints — registered as they're built).
+const pinChangeHooks = [() => { if (countriesReadyFlag && countriesOn) countries.rebuild(); }];
+pins.setOnChange(() => { for (const fn of pinChangeHooks) { try { fn(); } catch (e) {} } });
 
 // ── Layers popover + toggle switches ─────────────────────────────────────────
 const btnLayers = document.getElementById('btn-layers');
@@ -184,7 +192,62 @@ btnCinematic.addEventListener('click', () => {
   layersPanel.classList.remove('open');
   btnLayers.classList.remove('active');
   cinematic.start();
+  challenges.markCinematicUsed();
 });
+
+// ── Six-feature pass: planner, visa, challenges, surprise, AI, year review ────
+
+// Smoothly fly the Earth camera to a lat/lng (used by Surprise Me). Frames the
+// point centred by flying along its current world normal, then hands control back.
+function flyToLatLng(lat, lng) {
+  earthView.setSpin(false);
+  earthView.controls.enabled = false;
+  earthView.earth.updateMatrixWorld();
+  const worldDir = localFromLatLng(lat, lng, 1).applyQuaternion(earthView.earth.quaternion).normalize();
+  const fromPos = earthView.camera.position.clone();
+  const endPos = worldDir.multiplyScalar(2.7);
+  tween({
+    duration: 1200,
+    onUpdate: (k) => {
+      earthView.camera.position.lerpVectors(fromPos, endPos, k);
+      earthView.camera.lookAt(ORIGIN);
+    },
+    onComplete: () => {
+      earthView.controls.target.copy(ORIGIN);
+      if (!busy()) earthView.controls.enabled = true;
+      earthView.setSpin(true);
+    },
+  });
+}
+
+const visa = createVisaChecker({ sound });
+visa.mountSelector();
+
+const challenges = createChallenges({ getPins: pins.getPins, getTrips: pins.getTrips, sound });
+pinChangeHooks.push(() => challenges.check());
+
+const tripPlanner = createTripPlanner({
+  earthView, getPins: pins.getPins, sound, setHint, earthHint: EARTH_HINT,
+  startJourney: (waypoints) => { cinematic.start(waypoints); challenges.markCinematicUsed(); },
+});
+pinChangeHooks.push(() => tripPlanner.refresh());
+
+const surprise = createSurprise({
+  getPins: pins.getPins, addWishlistPin: pins.addWishlistPin, flyTo: flyToLatLng, sound,
+});
+
+const aiSuggester = createAISuggester({
+  getPins: pins.getPins, addWishlistPin: pins.addWishlistPin, sound,
+});
+
+const yearReview = createYearReview({ getPins: pins.getPins, getTrips: pins.getTrips, sound });
+
+// Buttons
+// (btn-surprise and btn-challenges wire their own click handlers inside their modules)
+document.getElementById('btn-planner').addEventListener('click', () => { sound.click(); tripPlanner.toggle(); });
+document.getElementById('stats-suggest').addEventListener('click', () => { stats.close(); aiSuggester.open(); });
+document.getElementById('stats-year').addEventListener('click', () => { stats.close(); yearReview.open(); });
+document.getElementById('profile-suggest').addEventListener('click', () => { profile.close(); aiSuggester.open(); });
 
 // ── Loading screen ─────────────────────────────────────────────────────────
 // Hold the globe behind a full-screen loader until every texture is in, then
@@ -304,6 +367,11 @@ function goToSolar() {
   btnLayers.classList.remove('active');
   featureCard.classList.remove('show');
   countryTip.classList.remove('show');
+  tripPlanner.close();
+  surprise.close();
+  challenges.close();
+  aiSuggester.close();
+  yearReview.close();
   sound.whoosh();
   flyCamera(earthView, new THREE.Vector3(0, 0, 16), ORIGIN, 700); // pull away from Earth
   fade(1, 650, () => {
@@ -599,7 +667,10 @@ window.addEventListener('pointermove', (e) => {
         countries.hoverAt(null, null);
       }
       if (info) {
-        countryTip.innerHTML = info.name + (info.pinCount ? ` · <b>${info.pinCount} pin${info.pinCount === 1 ? '' : 's'}</b>` : '');
+        const visaBadge = visa.badgeHtml(info.name);
+        countryTip.innerHTML = info.name +
+          (info.pinCount ? ` · <b>${info.pinCount} pin${info.pinCount === 1 ? '' : 's'}</b>` : '') +
+          (visaBadge ? `<span class="visa-line">${visaBadge}</span>` : '');
         countryTip.style.left = (e.clientX + 14) + 'px';
         countryTip.style.top = (e.clientY + 14) + 'px';
         countryTip.classList.add('show');
@@ -642,6 +713,7 @@ function animate(now) {
   if (mode === 'earth') {
     earthView.update(dt);
     pins.update(dt);
+    tripPlanner.update(dt);
     weather.update(dt);
     const sun = getSunDirection();
     aurora.update(sun, dt);
@@ -653,6 +725,7 @@ function animate(now) {
     renderer.render(earthView.scene, earthView.camera);
     // Pull back far enough (and not mid-task) → leave for the solar system.
     if (ready && !busy() && !cinematic.isActive() && !pins.panelOpen() && !stats.isOpen() && !profile.isOpen() &&
+        !tripPlanner.isOpen() && !surprise.isOpen() && !challenges.isOpen() && !aiSuggester.isOpen() && !yearReview.isOpen() &&
         earthView.getDistance() > EARTH_EXIT_DIST) goToSolar();
   } else {
     solarView.update(dt);

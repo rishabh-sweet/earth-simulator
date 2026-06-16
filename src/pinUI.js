@@ -380,6 +380,28 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     sound.click();
   }
 
+  // Programmatically drop a Wishlist pin (used by AI suggestions, Surprise Me,
+  // and the trip suggester). Returns true on success, false if storage is full.
+  function addWishlistPin(lat, lng, name) {
+    const pin = {
+      id: genId('pin_'), name: name || 'Wishlist place', lat, lng,
+      type: 'wishlist', tripId: null, note: '', photoBase64: null,
+      dateAdded: new Date().toISOString(),
+    };
+    store.push(pin);
+    layer.addPin(renderData(pin));
+    if (!persist()) {
+      store.pop();
+      layer.removePin(pin.id);
+      return false;
+    }
+    renderStats();
+    rebuildFlights();
+    notifyChange();
+    sound.chime();
+    return true;
+  }
+
   // ── Info card ─────────────────────────────────────────────────────────────────
   function openCard(id) {
     const pin = store.find((p) => p.id === id);
@@ -498,6 +520,7 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     tripsForm.hidden = true;
     tripNameInput.value = '';
     renderTripsList();
+    notifyChange(); // lets the challenge system re-check "Planner"
     sound.chime();
   }
 
@@ -590,7 +613,7 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     update: (dt) => { layer.update(dt); flights.update(dt); },
     toggleMode, isPinMode, panelOpen,
     showChrome, hideChrome, closePanels,
-    pickPin, openAdd, openCard, openEdit,
+    pickPin, openAdd, openCard, openEdit, addWishlistPin,
     toggleFlights, openTrips, setOnChange: (fn) => { changeListener = fn; },
     getPins: () => store,
     getTrips: () => trips,

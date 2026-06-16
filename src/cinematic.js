@@ -61,8 +61,11 @@ export function createCinematic({ earthView, sound, getVisitedPins }) {
     titleShown = true;
   }
 
-  function start() {
-    const visited = getVisitedPins();
+  // With no argument, flies through the user's visited pins (the default tour).
+  // Pass an explicit array of pin-like objects ({ lat, lng, name, note }) to fly
+  // a custom sequence — used by the Trip Planner's "Start Journey".
+  function start(customSeq) {
+    const visited = Array.isArray(customSeq) && customSeq.length ? customSeq : getVisitedPins();
     if (visited.length < 2) return false;
     seq = visited;
     active = true;

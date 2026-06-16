@@ -944,3 +944,209 @@ body.cinematic-on #layers-panel {
   .layers-panel { top: 120px; right: 14px; }
   .feature-pop { bottom: 100px; left: 14px; }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Six new features: trip planner, visa, AI suggester, challenges,
+   surprise me, year in review
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Emoji tool buttons in the cluster */
+.ui-emoji { font-size: 19px; line-height: 1; }
+#btn-planner.active { background: linear-gradient(135deg, #49e0ff, #4f8bff); border-color: #49e0ff; }
+@keyframes dice-roll {
+  0% { transform: rotate(0) scale(1); }
+  50% { transform: rotate(190deg) scale(1.25); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+#btn-surprise.rolling { animation: dice-roll 0.6s ease; }
+
+/* ── Trip Planner panel ──────────────────────────────────────────────────── */
+.planner-hint { font-size: 13px; color: rgba(233, 238, 252, 0.55); margin: 2px 0 14px; line-height: 1.5; }
+.planner-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0 0 6px; padding: 0; }
+.wp-item {
+  display: flex; align-items: center; gap: 10px; padding: 11px 13px; border-radius: 12px;
+  background: rgba(73, 224, 255, 0.07); border: 1px solid rgba(73, 224, 255, 0.22);
+  cursor: grab; transition: background 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+}
+.wp-item:hover { background: rgba(73, 224, 255, 0.13); }
+.wp-item.dragging { opacity: 0.4; cursor: grabbing; }
+.wp-grip { color: rgba(255, 255, 255, 0.4); font-size: 14px; cursor: grab; }
+.wp-num {
+  flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  font-family: 'Clash Display', sans-serif; font-weight: 700; font-size: 12px;
+  background: rgba(73, 224, 255, 0.2); color: #aef0ff;
+}
+.wp-name { font-size: 14px; color: #eef3ff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.planner-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 16px 0 4px;
+  padding: 14px; border-radius: 14px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.ps-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; }
+.ps-num { font-family: 'Clash Display', sans-serif; font-weight: 700; font-size: 17px; color: #aef0ff; }
+.ps-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(233, 238, 252, 0.5); }
+#planner-start:disabled { opacity: 0.4; cursor: not-allowed; }
+.planner-saved { margin-top: 18px; }
+.planner-saved-label { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(233, 238, 252, 0.5); margin-bottom: 8px; }
+.saved-route { display: flex; align-items: center; gap: 8px; padding: 9px 11px; border-radius: 10px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 7px; }
+.sr-name { flex: 1; font-size: 13px; color: #eef3ff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sr-meta { font-size: 11px; color: rgba(233, 238, 252, 0.45); }
+.sr-load { padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(73, 224, 255, 0.4); background: rgba(73, 224, 255, 0.12); color: #aef0ff; font-family: inherit; font-size: 12px; cursor: pointer; }
+.sr-del { width: 22px; height: 22px; border-radius: 50%; border: none; background: rgba(0, 0, 0, 0.4); color: #fff; font-size: 14px; line-height: 1; cursor: pointer; opacity: 0.6; }
+.sr-del:hover { opacity: 1; background: rgba(255, 107, 107, 0.4); }
+
+/* ── Visa badge in the country tooltip ───────────────────────────────────── */
+.visa-line { display: block; margin-top: 5px; }
+.visa-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; letter-spacing: 0.02em; }
+.visa-badge.free { background: rgba(0, 229, 150, 0.16); color: #8ff0c4; border: 1px solid rgba(0, 229, 150, 0.5); }
+.visa-badge.arrival { background: rgba(255, 206, 106, 0.16); color: #ffe2a6; border: 1px solid rgba(255, 206, 106, 0.5); }
+.visa-badge.required { background: rgba(127, 184, 255, 0.16); color: #cfe2ff; border: 1px solid rgba(127, 184, 255, 0.5); }
+.visa-badge.none { background: rgba(255, 107, 107, 0.16); color: #ffb0a0; border: 1px solid rgba(255, 107, 107, 0.5); }
+.visa-badge.self { background: rgba(255, 255, 255, 0.1); color: #e9eefc; border: 1px solid rgba(255, 255, 255, 0.25); }
+.visa-hint { display: block; margin-top: 5px; font-size: 11px; color: rgba(233, 238, 252, 0.5); font-style: italic; }
+
+/* Profile passport selector */
+.profile-passport-row { margin-bottom: 18px; }
+.profile-passport-row label { display: block; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(233, 238, 252, 0.55); margin-bottom: 7px; }
+#profile-suggest { margin-bottom: 14px; }
+.stats-feature-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }
+.stats-feature-row .btn-ghost { flex: 0 1 auto; }
+
+/* ── Challenges overlay ──────────────────────────────────────────────────── */
+.challenges-progress { display: flex; align-items: center; gap: 14px; max-width: 520px; margin: 22px auto 30px; }
+.challenges-bar { flex: 1; height: 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.challenges-bar-fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #ffd479, #f0a93a); transition: width 0.8s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.challenges-count { font-family: 'Clash Display', sans-serif; font-weight: 700; font-size: 17px; color: #ffe2a6; }
+.challenges-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; text-align: left; }
+.challenge-card { padding: 18px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; gap: 6px; transition: transform 0.2s ease; }
+.challenge-card.unlocked { border-color: rgba(255, 215, 0, 0.5); background: rgba(255, 215, 0, 0.08); }
+.challenge-card.locked { opacity: 0.45; }
+.challenge-card .ch-emoji { font-size: 30px; }
+.challenge-card .ch-title { font-family: 'Clash Display', sans-serif; font-weight: 600; font-size: 16px; color: #fff; }
+.challenge-card.unlocked .ch-title { color: #ffe2a6; }
+.challenge-card .ch-desc { font-size: 12.5px; color: rgba(233, 238, 252, 0.7); line-height: 1.4; }
+.challenge-card .ch-foot { margin-top: 4px; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(233, 238, 252, 0.45); }
+.challenge-card.unlocked .ch-foot { color: rgba(255, 215, 0, 0.7); }
+
+/* Challenge unlock toast + CSS confetti */
+.challenge-toast {
+  position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%) translateY(20px);
+  z-index: 130; display: flex; align-items: center; gap: 14px; padding: 16px 22px 16px 16px;
+  border-radius: 18px; background: rgba(14, 18, 32, 0.94); border: 1px solid rgba(255, 215, 0, 0.5);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5); opacity: 0; pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s ease; overflow: hidden;
+}
+.challenge-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.challenge-toast .ct-badge { font-size: 38px; flex: none; }
+.challenge-toast .ct-text { display: flex; flex-direction: column; gap: 2px; }
+.challenge-toast .ct-eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #ffd479; }
+.challenge-toast .ct-title { font-family: 'Clash Display', sans-serif; font-weight: 700; font-size: 18px; color: #fff; }
+.challenge-toast .ct-desc { font-size: 12.5px; color: rgba(233, 238, 252, 0.7); }
+.challenge-toast .confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.challenge-toast .confetti i { position: absolute; top: -12px; width: 7px; height: 11px; border-radius: 2px; opacity: 0.9; animation: confetti-fall linear infinite; }
+@keyframes confetti-fall {
+  0% { transform: translateY(-12px) rotate(0); opacity: 1; }
+  100% { transform: translateY(120px) rotate(360deg); opacity: 0; }
+}
+
+/* ── Surprise Me card ────────────────────────────────────────────────────── */
+.surprise-card {
+  position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%) translateY(20px);
+  z-index: 110; width: 340px; max-width: calc(100vw - 36px); padding: 24px 24px 22px;
+  border-radius: 22px; background: linear-gradient(165deg, rgba(18, 22, 40, 0.96), rgba(8, 10, 20, 0.96));
+  border: 1px solid rgba(127, 184, 255, 0.25); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6); color: #e9eefc; text-align: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.surprise-card.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+.surprise-flag { font-size: 56px; line-height: 1; }
+.surprise-name { font-family: 'Clash Display', sans-serif; font-weight: 700; font-size: 26px; margin: 8px 0 14px; }
+.surprise-rows { display: flex; flex-direction: column; gap: 7px; text-align: left; margin-bottom: 14px; }
+.surprise-rows .srow { display: flex; justify-content: space-between; font-size: 13.5px; }
+.surprise-rows .srow span:first-child { color: rgba(233, 238, 252, 0.5); }
+.surprise-fact { font-size: 14px; line-height: 1.55; color: rgba(233, 238, 252, 0.85); background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; }
+.surprise-actions { display: flex; flex-direction: column; gap: 10px; }
+.surprise-actions .btn-primary, .surprise-actions .btn-ghost { width: 100%; }
+
+/* ── AI Trip Suggester ───────────────────────────────────────────────────── */
+.ai-body { max-width: 760px; margin: 18px auto 0; }
+.ai-eyebrow { font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: #c49bff; margin-bottom: 16px; }
+.ai-keybox { max-width: 440px; margin: 20px auto; text-align: center; display: flex; flex-direction: column; gap: 14px; }
+.ai-key-icon { font-size: 40px; }
+.ai-keybox h3 { font-size: 18px; font-weight: 500; color: #fff; line-height: 1.4; }
+#ai-key-input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.06); color: #fff; font-family: inherit; font-size: 15px; outline: none; }
+#ai-key-input:focus { border-color: rgba(196, 155, 255, 0.6); }
+#ai-key-input.error { border-color: #ff6b6b; animation: shake 0.4s; }
+.ai-key-note { font-size: 12px; color: rgba(233, 238, 252, 0.5); line-height: 1.5; }
+.ai-key-note a { color: #c49bff; }
+.ai-loading { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 50px 0; }
+.ai-spark { font-size: 42px; animation: ai-pulse 1.4s ease-in-out infinite; }
+@keyframes ai-pulse { 0%, 100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.25); opacity: 1; } }
+.ai-loading-text { font-size: 16px; color: rgba(233, 238, 252, 0.85); }
+.ai-dots i { animation: ai-dot 1.4s infinite; opacity: 0; }
+.ai-dots i:nth-child(2) { animation-delay: 0.2s; }
+.ai-dots i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes ai-dot { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+.ai-error { text-align: center; padding: 40px 0; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.ai-error-icon { font-size: 40px; }
+.ai-error p { color: rgba(233, 238, 252, 0.85); font-size: 15px; max-width: 420px; }
+.ai-error-actions { display: flex; gap: 10px; }
+.ai-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; text-align: left; margin-bottom: 18px; }
+.ai-card { padding: 20px; border-radius: 18px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(196, 155, 255, 0.25); display: flex; flex-direction: column; gap: 8px; }
+.ai-card-month { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #c49bff; }
+.ai-card-dest { font-family: 'Clash Display', sans-serif; font-weight: 700; font-size: 22px; color: #fff; }
+.ai-card-reason { font-size: 13.5px; line-height: 1.5; color: rgba(233, 238, 252, 0.8); }
+.ai-card-must { font-size: 13px; color: rgba(233, 238, 252, 0.9); }
+.ai-card-must span { display: block; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(233, 238, 252, 0.45); margin-bottom: 2px; }
+.ai-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+.ai-budget { padding: 4px 12px; border-radius: 999px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.ai-budget.budget { background: rgba(0, 229, 150, 0.16); color: #8ff0c4; border: 1px solid rgba(0, 229, 150, 0.5); }
+.ai-budget.mid { background: rgba(255, 206, 106, 0.16); color: #ffe2a6; border: 1px solid rgba(255, 206, 106, 0.5); }
+.ai-budget.luxury { background: rgba(255, 215, 0, 0.18); color: #ffe27a; border: 1px solid rgba(255, 215, 0, 0.6); }
+.ai-pin { flex: 0 0 auto; padding: 7px 12px; font-size: 12px; text-transform: none; letter-spacing: 0; }
+.ai-nopin { font-size: 11px; color: rgba(233, 238, 252, 0.4); }
+
+/* ── Year in Review ──────────────────────────────────────────────────────── */
+.year-overlay {
+  position: fixed; inset: 0; z-index: 140; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 30%, rgba(45, 27, 105, 0.92), rgba(6, 8, 16, 0.98));
+  -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+  opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+}
+.year-overlay.open { opacity: 1; pointer-events: auto; }
+.year-overlay .sheet-x { position: fixed; top: 20px; right: 20px; z-index: 3; }
+.year-yearsel { position: fixed; top: 22px; left: 50%; transform: translateX(-50%); z-index: 3; display: flex; align-items: center; gap: 16px; color: #fff; }
+.year-yearsel #year-label { font-family: 'Clash Display', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: 0.05em; }
+.year-arrow { width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.06); color: #fff; font-size: 20px; line-height: 1; cursor: pointer; }
+.year-arrow:hover { background: rgba(255, 255, 255, 0.15); }
+.year-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.yr-slide { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; padding: 0 24px; max-width: 760px; opacity: 0; transform: scale(0.94); transition: opacity 0.7s ease, transform 0.7s ease; }
+.yr-slide.in { opacity: 1; transform: scale(1); }
+.yr-eyebrow { font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
+.yr-big { font-family: 'Clash Display', sans-serif; font-weight: 700; font-size: clamp(72px, 16vw, 150px); line-height: 1; background: linear-gradient(135deg, #ffd700, #ff8a5b, #ff6b8a); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.yr-big.small { font-size: clamp(34px, 7vw, 60px); }
+.yr-count { font-family: 'Clash Display', sans-serif; font-weight: 700; font-size: clamp(80px, 18vw, 180px); line-height: 1; color: #fff; }
+.yr-sub { font-size: clamp(18px, 3vw, 26px); color: rgba(255, 255, 255, 0.8); }
+.yr-mid { font-family: 'Clash Display', sans-serif; font-weight: 600; font-size: clamp(34px, 7vw, 64px); line-height: 1.1; color: #fff; }
+.yr-rank { margin-top: 8px; padding: 8px 22px; border-radius: 999px; background: rgba(255, 215, 0, 0.16); border: 1px solid rgba(255, 215, 0, 0.5); color: #ffe2a6; font-size: 15px; letter-spacing: 0.16em; text-transform: uppercase; }
+.yr-photo { margin-top: 10px; max-width: 320px; max-height: 220px; width: auto; border-radius: 16px; }
+.yr-share-note { margin-top: 6px; font-size: 13px; color: #00e5cc; min-height: 16px; }
+.year-stage .btn-primary { margin-top: 8px; }
+/* Mini globe */
+.mini-globe { position: relative; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #4a7bd0, #18306a 60%, #0a1838); box-shadow: inset -10px -12px 30px rgba(0, 0, 0, 0.5), 0 0 50px rgba(79, 139, 208, 0.35); overflow: hidden; }
+.mini-globe.big { width: 150px; height: 150px; }
+.mini-globe.glow { width: 130px; height: 130px; box-shadow: inset -10px -12px 30px rgba(0, 0, 0, 0.5), 0 0 60px rgba(0, 229, 204, 0.55); }
+.mini-globe .mg-sheen { position: absolute; inset: 0; border-radius: 50%; background: linear-gradient(120deg, transparent 40%, rgba(255, 255, 255, 0.18) 50%, transparent 60%); animation: mg-spin 6s linear infinite; }
+@keyframes mg-spin { to { transform: rotate(360deg); } }
+.yr-confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.yr-confetti i { position: absolute; top: -14px; width: 8px; height: 13px; border-radius: 2px; animation: confetti-fall 2.4s linear infinite; }
+.yr-pindrops { position: absolute; inset: 0; pointer-events: none; }
+.yr-pindot { position: absolute; width: 12px; height: 12px; border-radius: 50% 50% 50% 0; background: #ffce6a; transform: rotate(-45deg) scale(0); box-shadow: 0 0 10px rgba(255, 206, 106, 0.7); animation: pin-pop 0.5s ease forwards; }
+@keyframes pin-pop { to { transform: rotate(-45deg) scale(1); } }
+
+@media (max-width: 640px) {
+  .challenges-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .surprise-card { bottom: 70px; }
+  .stats-feature-row { flex-direction: column; }
+  .stats-feature-row .btn-ghost { width: 100%; }
+}

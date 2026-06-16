@@ -112,6 +112,9 @@
           <path d="M5 20V11M12 20V4M19 20v-6M3 20h18" />
         </svg>
       </button>
+      <button id="btn-planner" class="ui-icon ui-emoji" aria-label="Plan a trip" title="Plan Trip">🗺️</button>
+      <button id="btn-surprise" class="ui-icon ui-emoji" aria-label="Surprise me" title="Surprise Me">🎲</button>
+      <button id="btn-challenges" class="ui-icon ui-emoji" aria-label="Challenges" title="Challenges">🏆</button>
       <button id="btn-pin" class="ui-icon pin-toggle" aria-label="Toggle pin mode" aria-pressed="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z" />
@@ -281,6 +284,11 @@
 
         <div class="stats-grid" id="stats-grid"></div>
 
+        <div class="stats-feature-row">
+          <button type="button" id="stats-suggest" class="btn-ghost">✨ Suggest My Next Trip</button>
+          <button type="button" id="stats-year" class="btn-ghost">📅 Year in Review</button>
+        </div>
+
         <div class="stats-share-row">
           <button type="button" id="stats-share" class="btn-primary">Share my stats</button>
           <span id="stats-share-note" class="stats-share-note"></span>
@@ -300,6 +308,14 @@
         <p id="profile-bio" class="profile-bio"></p>
         <div id="profile-since" class="profile-since"></div>
         <div id="profile-quickstats" class="profile-quickstats"></div>
+
+        <div class="profile-passport-row">
+          <label for="profile-passport">My passport</label>
+          <select id="profile-passport" class="pin-select"></select>
+          <span class="public-link-note">Used to show visa requirements when you hover a country.</span>
+        </div>
+
+        <button type="button" id="profile-suggest" class="btn-ghost full">✨ Suggest My Next Trip</button>
 
         <div class="profile-link">
           <label>My public link</label>
@@ -324,6 +340,70 @@
           </div>
         </form>
       </div>
+    </div>
+
+    <!-- Trip Planner panel (slides in from the right) -->
+    <div id="planner-panel" class="pin-sheet">
+      <div class="pin-sheet-inner">
+        <button id="planner-close" class="sheet-x" aria-label="Close">×</button>
+        <h2>🗺️ Plan Trip</h2>
+        <p class="planner-hint">Drag your wishlist pins to set the order of your journey.</p>
+        <ol id="planner-list" class="planner-list"></ol>
+        <p id="planner-empty" class="trips-empty">Add some wishlist pins to plan a route.</p>
+
+        <div class="planner-stats">
+          <div class="ps-cell"><span class="ps-num" id="planner-dist">0 km</span><span class="ps-label">Distance</span></div>
+          <div class="ps-cell"><span class="ps-num" id="planner-time">0m</span><span class="ps-label">Flight time</span></div>
+          <div class="ps-cell"><span class="ps-num" id="planner-stops">0</span><span class="ps-label">Stops</span></div>
+        </div>
+
+        <div class="pin-actions">
+          <button type="button" id="planner-start" class="btn-primary">▶ Start Journey</button>
+          <button type="button" id="planner-save" class="btn-ghost">Save</button>
+        </div>
+
+        <div id="planner-saved" class="planner-saved"></div>
+      </div>
+    </div>
+
+    <!-- Surprise Me card -->
+    <div id="surprise-card" class="surprise-card" aria-hidden="true"></div>
+
+    <!-- Challenges overlay (full-screen glass) -->
+    <div id="challenges-overlay" class="stats-overlay">
+      <button id="challenges-close" class="sheet-x" aria-label="Close">×</button>
+      <div class="stats-overlay-inner">
+        <p class="stats-eyebrow">Collect them all</p>
+        <h2 class="stats-title">🏆 Challenges</h2>
+        <div class="challenges-progress">
+          <div class="challenges-bar"><div id="challenges-bar-fill" class="challenges-bar-fill"></div></div>
+          <span id="challenges-count" class="challenges-count">0/12</span>
+        </div>
+        <div id="challenges-grid" class="challenges-grid"></div>
+      </div>
+    </div>
+
+    <!-- Challenge unlock toast (with CSS confetti) -->
+    <div id="challenge-toast" class="challenge-toast" aria-hidden="true"></div>
+
+    <!-- AI Trip Suggester overlay -->
+    <div id="ai-overlay" class="stats-overlay">
+      <button id="ai-close" class="sheet-x" aria-label="Close">×</button>
+      <div class="stats-overlay-inner">
+        <h2 class="stats-title">✨ Suggest My Next Trip</h2>
+        <div id="ai-body" class="ai-body"></div>
+      </div>
+    </div>
+
+    <!-- Year in Review overlay -->
+    <div id="year-overlay" class="year-overlay">
+      <button id="year-close" class="sheet-x" aria-label="Close">×</button>
+      <div class="year-yearsel">
+        <button id="year-prev" class="year-arrow" aria-label="Previous year">‹</button>
+        <span id="year-label">2026</span>
+        <button id="year-next" class="year-arrow" aria-label="Next year">›</button>
+      </div>
+      <div id="year-stage" class="year-stage"></div>
     </div>
 
     <!-- Sound toggle (procedural audio; bottom-right) -->
