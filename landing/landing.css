@@ -159,15 +159,18 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 600; line-height: 1
   background-clip: padding-box;
 }
 .btn-glow-wrap {
-  position: relative;
-  display: inline-block;
-  border-radius: 999px;
+  display: inline-flex;
   padding: 2px;
-  background: linear-gradient(135deg, #4A90E2, #E8B86D, #FF6B6B);
-  background-size: 200% 200%;
-  animation: grad-border 3s linear infinite;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #4A90E2, #E8B86D, #FF6B6B, #4A90E2);
+  background-size: 300% 300%;
+  animation: grad-border-spin 4s linear infinite;
 }
-@keyframes grad-border {
+.btn-glow-wrap .btn-glow {
+  background: linear-gradient(135deg, #0a1535, #1a0535);
+  border: none;
+}
+@keyframes grad-border-spin {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
@@ -865,6 +868,29 @@ footer::before, .site-footer::before {
   .icon-drop .ic-pin, .icon-photo .ic-shot, .icon-share .ic-node,
   .btn-primary::after { animation: none !important; }
   .reveal { transition: none; }
+}
+
+/* ── Bento card — clay morphism ──────────────────────────────────────────── */
+.bento-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
+  box-shadow:
+    0 2px 0 rgba(255,255,255,0.08) inset,
+    0 -1px 0 rgba(0,0,0,0.2) inset,
+    0 8px 32px rgba(0,0,0,0.4),
+    0 2px 8px rgba(74,144,226,0.1);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  backdrop-filter: blur(40px) saturate(180%);
+  transition: transform 250ms ease, box-shadow 250ms ease;
+}
+.bento-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 2px 0 rgba(255,255,255,0.1) inset,
+    0 -1px 0 rgba(0,0,0,0.2) inset,
+    0 20px 50px rgba(0,0,0,0.5),
+    0 4px 16px rgba(74,144,226,0.15);
 }
 
 /* orb backgrounds */

@@ -20,6 +20,7 @@ import { createCountryLayer } from './countries.js';
 import { createCinematic } from './cinematic.js';
 import { getSunDirection } from './sun.js';
 import { tween, updateTweens } from './tween.js';
+import { animate, stagger } from "animejs";
 import { SoundManager } from './sound.js';
 import { createCloudSync, emailSlug } from './cloudSync.js';
 import { supabase } from './supabase.js';
@@ -122,9 +123,9 @@ const profile = createProfile({
 });
 
 btnPin.addEventListener('click', () => { sound.click(); pins.toggleMode(); });
-document.getElementById('btn-flights').addEventListener('click', () => { sound.click(); pins.toggleFlights(); });
-document.getElementById('btn-trips').addEventListener('click', () => { sound.click(); pins.openTrips(); });
-document.getElementById('btn-stats').addEventListener('click', () => { sound.click(); stats.open(); });
+document.getElementById('btn-flights')?.addEventListener('click', () => { sound.click(); pins.toggleFlights(); });
+document.getElementById('btn-trips')?.addEventListener('click', () => { sound.click(); pins.openTrips(); });
+document.getElementById('btn-stats')?.addEventListener('click', () => { sound.click(); stats.open(); });
 // (the profile avatar button wires itself up inside profile.js)
 
 // ── Live weather overlay (RainViewer radar tiles) ────────────────────────────
@@ -184,20 +185,43 @@ function setSwitch(el, on) {
   if (el instanceof HTMLInputElement) el.checked = on;
 }
 
-function openLayers() { layersPanel?.classList.add('open'); layersPanel?.setAttribute('aria-hidden', 'false'); btnLayers?.classList.add('active'); }
-function closeLayers() { layersPanel?.classList.remove('open'); layersPanel?.setAttribute('aria-hidden', 'true'); btnLayers?.classList.remove('active'); }
+function openLayers() {
+  layersPanel?.classList.add("open");
+  layersPanel?.setAttribute("aria-hidden", "false");
+  btnLayers?.classList.add("active");
+  if (layersPanel) {
+    animate(layersPanel, { opacity: [0, 1], translateX: [-12, 0], duration: 250, ease: "outQuad" });
+  }
+}
+function closeLayers() {
+  btnLayers?.classList.remove("active");
+  if (layersPanel) {
+    animate(layersPanel, {
+      opacity: [1, 0], translateX: [0, -12], duration: 200, ease: "inQuad",
+      onComplete: () => {
+        layersPanel.classList.remove("open");
+        layersPanel.setAttribute("aria-hidden", "true");
+        layersPanel.style.opacity = "";
+        layersPanel.style.transform = "";
+      },
+    });
+  } else {
+    layersPanel?.classList.remove("open");
+    layersPanel?.setAttribute("aria-hidden", "true");
+  }
+}
 btnLayers?.addEventListener('click', () => { sound?.click?.(); if (layersPanel?.classList.contains('open')) closeLayers(); else openLayers(); });
 layersClose?.addEventListener('click', closeLayers);
-swAurora.addEventListener('change', () => { sound.click(); auroraOn = !auroraOn; aurora.setVisible(auroraOn); setSwitch(swAurora, auroraOn); });
-swTerminator.addEventListener('change', () => { sound.click(); terminatorOn = !terminatorOn; terminator.setVisible(terminatorOn); setSwitch(swTerminator, terminatorOn); });
-swSeismic.addEventListener('change', () => {
+swAurora?.addEventListener('change', () => { sound.click(); auroraOn = !auroraOn; aurora.setVisible(auroraOn); setSwitch(swAurora, auroraOn); });
+swTerminator?.addEventListener('change', () => { sound.click(); terminatorOn = !terminatorOn; terminator.setVisible(terminatorOn); setSwitch(swTerminator, terminatorOn); });
+swSeismic?.addEventListener('change', () => {
   sound.click();
   seismicOn = !seismicOn;
   seismic.setVisible(seismicOn);
   setSwitch(swSeismic, seismicOn);
   if (seismicOn) seismic.refresh(); // fetch on first/each enable
 });
-swCountries.addEventListener('change', () => {
+swCountries?.addEventListener('change', () => {
   sound.click();
   countriesOn = !countriesOn;
   setSwitch(swCountries, countriesOn);
@@ -254,45 +278,103 @@ const issTracker = {
   setVisible: (v) => _issTrackerInst?.setVisible(v),
 };
 
-const timeZones = (() => {
-  try { return createTimeZoneLayer(earthView.earth); }
-  catch (e) { console.error('[WG] timeZones failed:', e); return { setVisible: _noop }; }
-})();
+// ── Lazy module inits ─────────────────────────────────────────────────────────
+// Each module is only instantiated on first use so page init stays fast.
 
-const seismicTimeline = (() => {
-  try { return createSeismicTimeline(seismic, earthView.earth); }
-  catch (e) { console.error('[WG] seismicTimeline failed:', e); return { show: _noop, hide: _noop }; }
-})();
+let _timeZonesInst = null;
+function _getTimeZones() {
+  if (!_timeZonesInst) {
+    try { _timeZonesInst = createTimeZoneLayer(earthView.earth); }
+    catch (e) { console.error('[WG] timeZones:', e); _timeZonesInst = { setVisible: _noop, onCountChange: _noop }; }
+  }
+  return _timeZonesInst;
+}
+const timeZones = { setVisible: (v) => _getTimeZones().setVisible(v) };
 
-const countryFacts = (() => {
-  try { return createCountryFacts({ visa, pins, flyTo: flyToLatLng, sound }); }
-  catch (e) { console.error('[WG] countryFacts failed:', e); return { show: _noop }; }
-})();
+let _seismicTimelineInst = null;
+function _getSeismicTimeline() {
+  if (!_seismicTimelineInst) {
+    try { _seismicTimelineInst = createSeismicTimeline(seismic, earthView.earth); }
+    catch (e) { console.error('[WG] seismicTimeline:', e); _seismicTimelineInst = { show: _noop, hide: _noop }; }
+  }
+  return _seismicTimelineInst;
+}
+const seismicTimeline = { show: () => _getSeismicTimeline().show(), hide: () => _getSeismicTimeline().hide() };
 
-const weatherPins = (() => {
-  try { return createWeatherPins(earthView.earth, { getPins: pins.getPins }); }
-  catch (e) { console.error('[WG] weatherPins failed:', e); return { setVisible: _noop, rebuild: _noop, cardHtml: () => '' }; }
-})();
+let _countryFactsInst = null;
+function _getCountryFacts() {
+  if (!_countryFactsInst) {
+    try { _countryFactsInst = createCountryFacts({ visa, pins, flyTo: flyToLatLng, sound }); }
+    catch (e) { console.error('[WG] countryFacts:', e); _countryFactsInst = { show: _noop }; }
+  }
+  return _countryFactsInst;
+}
+const countryFacts = { show: (c) => _getCountryFacts().show(c) };
 
-const population = (() => {
-  try { return createPopulationLayer(earthView.earth); }
-  catch (e) { console.error('[WG] population failed:', e); return { setVisible: _noop }; }
-})();
+let _weatherPinsInst = null;
+function _getWeatherPins() {
+  if (!_weatherPinsInst) {
+    try { _weatherPinsInst = createWeatherPins(earthView.earth, { getPins: pins.getPins }); }
+    catch (e) { console.error('[WG] weatherPins:', e); _weatherPinsInst = { setVisible: _noop, rebuild: _noop, cardHtml: () => '' }; }
+  }
+  return _weatherPinsInst;
+}
+const weatherPins = {
+  setVisible: (v) => _getWeatherPins().setVisible(v),
+  rebuild: () => _weatherPinsInst ? _weatherPinsInst.rebuild() : undefined,
+  cardHtml: (id) => _weatherPinsInst ? _weatherPinsInst.cardHtml(id) : '',
+};
 
-const travelHeatmap = (() => {
-  try { return createTravelHeatmap(earthView.earth, { getPins: pins.getPins }); }
-  catch (e) { console.error('[WG] travelHeatmap failed:', e); return { setVisible: _noop, rebuild: _noop }; }
-})();
+let _populationInst = null;
+function _getPopulation() {
+  if (!_populationInst) {
+    try { _populationInst = createPopulationLayer(earthView.earth); }
+    catch (e) { console.error('[WG] population:', e); _populationInst = { setVisible: _noop }; }
+  }
+  return _populationInst;
+}
+const population = { setVisible: (v) => _getPopulation().setVisible(v) };
 
-const ambientMusic = (() => {
-  try { return createAmbientMusic(sound); }
-  catch (e) { console.error('[WG] ambientMusic failed:', e); return { update: _noop, stop: _noop, dispose: _noop }; }
-})();
+let _travelHeatmapInst = null;
+function _getTravelHeatmap() {
+  if (!_travelHeatmapInst) {
+    try { _travelHeatmapInst = createTravelHeatmap(earthView.earth, { getPins: pins.getPins }); }
+    catch (e) { console.error('[WG] travelHeatmap:', e); _travelHeatmapInst = { setVisible: _noop, rebuild: _noop }; }
+  }
+  return _travelHeatmapInst;
+}
+const travelHeatmap = {
+  setVisible: (v, f) => _getTravelHeatmap().setVisible(v, f),
+  rebuild: () => _travelHeatmapInst ? _travelHeatmapInst.rebuild() : undefined,
+};
 
-const screenshotMode = (() => {
-  try { return createScreenshotMode({ renderer, getScene: () => earthView.scene, getCamera: () => earthView.camera }); }
-  catch (e) { console.error('[WG] screenshotMode failed:', e); return { capture: _noop, toggleClean: _noop, isClean: () => false }; }
-})();
+let _ambientMusicInst = null;
+function _getAmbientMusic() {
+  if (!_ambientMusicInst) {
+    try { _ambientMusicInst = createAmbientMusic(sound); }
+    catch (e) { console.error('[WG] ambientMusic:', e); _ambientMusicInst = { update: _noop, stop: _noop, dispose: _noop }; }
+  }
+  return _ambientMusicInst;
+}
+const ambientMusic = {
+  update: (lat, lng) => _ambientMusicInst ? _ambientMusicInst.update(lat, lng) : undefined,
+  stop: () => _ambientMusicInst?.stop(),
+  dispose: () => _ambientMusicInst?.dispose(),
+};
+
+let _screenshotModeInst = null;
+function _getScreenshotMode() {
+  if (!_screenshotModeInst) {
+    try { _screenshotModeInst = createScreenshotMode({ renderer, getScene: () => earthView.scene, getCamera: () => earthView.camera }); }
+    catch (e) { console.error('[WG] screenshotMode:', e); _screenshotModeInst = { capture: _noop, toggleClean: _noop, isClean: () => false }; }
+  }
+  return _screenshotModeInst;
+}
+const screenshotMode = {
+  capture: () => _getScreenshotMode().capture(),
+  toggleClean: () => _getScreenshotMode().toggleClean(),
+  isClean: () => _screenshotModeInst ? _screenshotModeInst.isClean() : false,
+};
 
 // Layer switches for new features
 const swFlights    = document.getElementById('sw-flights');
@@ -355,7 +437,7 @@ pins.setCardExtras((pin) => weatherPinsOn ? weatherPins.cardHtml(pin.id) : '');
 setInterval(() => { if (flightsOn) liveFlights.refresh(); }, 60 * 1000);
 
 // Seismic timeline shows/hides with the seismic layer (fires after main toggle)
-swSeismic.addEventListener('change', () => {
+swSeismic?.addEventListener('change', () => {
   // At this point seismicOn has already been toggled by the earlier listener
   if (seismicOn) seismicTimeline.show(); else seismicTimeline.hide();
 });
@@ -375,7 +457,7 @@ const cinematic = createCinematic({
     .sort((a, b) => (a.dateAdded || '').localeCompare(b.dateAdded || '')),
 });
 const btnCinematic = document.getElementById('btn-cinematic');
-btnCinematic.addEventListener('click', () => {
+btnCinematic?.addEventListener('click', () => {
   sound.click();
   const visited = pins.getPins().filter((p) => p.type === 'visited').length;
   if (visited < 2) {
@@ -438,7 +520,7 @@ const yearReview = createYearReview({ getPins: pins.getPins, getTrips: pins.getT
 
 // Buttons
 // (btn-surprise and btn-challenges wire their own click handlers inside their modules)
-document.getElementById('btn-planner').addEventListener('click', () => { sound.click(); tripPlanner.toggle(); });
+document.getElementById('btn-planner')?.addEventListener('click', () => { sound.click(); tripPlanner.toggle(); });
 document.getElementById('btn-year')?.addEventListener('click', () => { sound?.click?.(); yearReview?.open?.(); });
 document.getElementById('stats-suggest').addEventListener('click', () => { stats.close(); aiSuggester.open(); });
 document.getElementById('stats-year').addEventListener('click', () => { stats.close(); yearReview.open(); });
@@ -471,7 +553,7 @@ document.getElementById('profile-share-btn').addEventListener('click', () => {
   if (!email) { if (note) note.textContent = 'Sign in to generate a share link.'; return; }
   const url = `https://earth-simulator-two.vercel.app/globe?share=${emailSlug(email)}`;
   navigator.clipboard.writeText(url).then(
-    () => { if (note) note.textContent = '✓ Link copied!'; },
+    () => { if (note) note.textContent = 'Copied!'; },
     () => { if (note) note.textContent = url; }
   );
   if (sound) sound.chime();
@@ -569,10 +651,20 @@ function showWelcomeBack() {
   try { user = JSON.parse(localStorage.getItem('wanderglobe_user')); } catch (e) {}
   if (!user || !user.name) return;
   toastEl.textContent = `Welcome back, ${user.name}`;
+  toastEl.style.opacity = "0";
+  toastEl.style.transform = "translateY(20px)";
+  toastEl.classList.add("show");
+  animate(toastEl, { opacity: [0, 1], translateY: [20, 0], duration: 350, ease: "outExpo" });
   setTimeout(() => {
-    toastEl.classList.add('show');
-    setTimeout(() => toastEl.classList.remove('show'), 3000);
-  }, 500);
+    animate(toastEl, {
+      opacity: [1, 0], translateY: [0, -8], duration: 300, ease: "inQuad",
+      onComplete: () => {
+        toastEl.classList.remove("show");
+        toastEl.style.opacity = "";
+        toastEl.style.transform = "";
+      },
+    });
+  }, 3000);
 }
 
 // ── App state ────────────────────────────────────────────────────────────────
@@ -818,6 +910,7 @@ function showFeature(f) {
       fbRow('Last eruption', f.lastEruption || '—');
   }
   featureCard.classList.add('show');
+  animate(featureCard, { opacity: [0, 1], translateX: [20, 0], duration: 250, ease: "outQuad" });
   featureCard.setAttribute('aria-hidden', 'false');
   sound.chime();
 }
@@ -909,6 +1002,7 @@ window.addEventListener('pointerup', (e) => {
             fbRow('Speed', fd.speedKmh != null ? `${Math.round(fd.speedKmh)} km/h` : '—') +
             fbRow('Heading', fd.heading != null ? `${Math.round(fd.heading)}°` : '—');
           featureCard.classList.add('show');
+          animate(featureCard, { opacity: [0, 1], translateX: [20, 0], duration: 250, ease: "outQuad" });
           featureCard.setAttribute('aria-hidden', 'false');
           sound.chime();
           return;
@@ -936,6 +1030,7 @@ window.addEventListener('pointerup', (e) => {
             fbRow('Visibility', info?.visibility || '—') +
             '<div class="fb-row" style="font-size:12px;color:rgba(233,238,252,0.5);margin-top:6px">The ISS orbits Earth every 90 minutes at ~17,500 mph, completing 16 sunrises per day.</div>';
           featureCard.classList.add('show');
+          animate(featureCard, { opacity: [0, 1], translateX: [20, 0], duration: 250, ease: "outQuad" });
           featureCard.setAttribute('aria-hidden', 'false');
           sound.chime();
           return;
@@ -1047,8 +1142,8 @@ window.addEventListener('resize', () => {
 // ── Main loop ────────────────────────────────────────────────────────────────
 setHint(EARTH_HINT);
 let last = performance.now();
-function animate(now) {
-  requestAnimationFrame(animate);
+function renderLoop(now) {
+  requestAnimationFrame(renderLoop);
   const dt = Math.min((now - last) / 1000, 0.05);
   last = now;
   updateTweens(now);
@@ -1092,4 +1187,4 @@ function animate(now) {
     }
   }
 }
-requestAnimationFrame(animate);
+requestAnimationFrame(renderLoop);

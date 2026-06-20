@@ -229,7 +229,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 22px;
-  background: radial-gradient(circle at 50% 42%, #0a1024 0%, #05070d 70%);
+  background: radial-gradient(circle at 50% 42%, #0a0824 0%, var(--bg) 70%);
   transition: opacity 0.7s ease;
 }
 #loader.done {
@@ -278,25 +278,19 @@ body {
 /* ── Welcome-back toast (bottom-centre) ──────────────────────────────────── */
 #welcome-toast {
   position: fixed;
-  bottom: 74px;
+  bottom: 80px;
   left: 50%;
-  transform: translateX(-50%) translateY(10px);
-  z-index: 30;
-  padding: 11px 22px;
-  border-radius: 999px;
-  background: rgba(10, 16, 32, 0.7);
-  border: 1px solid rgba(127, 184, 255, 0.3);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  color: #eef3ff;
+  transform: translateX(-50%);
+  z-index: 100;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: rgba(5,0,16,0.9);
+  border: 1px solid var(--border);
+  color: rgba(255,255,255,0.9);
   font-size: 14px;
-  font-weight: 400;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  opacity: 0;
   pointer-events: none;
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  opacity: 0;
+  transition: none;
 }
 #welcome-toast.show {
   opacity: 1;
@@ -887,9 +881,10 @@ body {
   bottom: 112px;
   z-index: 30;
   width: 280px;
+  min-width: 240px;
   max-width: calc(100vw - 44px);
-  padding: 18px 20px;
-  border-radius: 16px;
+  padding: 20px;
+  border-radius: var(--radius);
   background: rgba(10, 16, 32, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.14);
   -webkit-backdrop-filter: blur(14px);
@@ -1677,3 +1672,70 @@ body.cinematic-on #earth-tools { opacity: 0 !important; pointer-events: none !im
   left: auto !important;
   bottom: auto !important;
 }
+
+/* ── Universal glass panels ── */
+.pin-sheet-inner,
+.stats-overlay,
+.feature-pop,
+.surprise-card,
+.year-overlay {
+  background: rgba(5,0,16,0.88) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+/* ── Primary buttons: coral→gold gradient ── */
+.btn-primary {
+  background: linear-gradient(135deg, var(--coral), var(--gold)) !important;
+  color: #fff !important;
+  border: none !important;
+  font-weight: 600;
+  transition: opacity 250ms ease, transform 250ms ease;
+}
+.btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* ── Ghost buttons: animated underline ── */
+.btn-ghost {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.75);
+  position: relative;
+  cursor: pointer;
+  transition: color 250ms ease;
+  padding-bottom: 2px;
+}
+.btn-ghost::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 0; height: 1px;
+  background: linear-gradient(90deg, var(--blue), var(--coral));
+  transition: width 250ms ease;
+}
+.btn-ghost:hover { color: rgba(255,255,255,1); }
+.btn-ghost:hover::after { width: 100%; }
+
+/* ── Secondary (glass) buttons ── */
+.btn-secondary {
+  background: var(--glass-bg);
+  border: 1px solid var(--border);
+  color: rgba(255,255,255,0.85);
+  border-radius: 12px;
+  transition: background 250ms ease;
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+/* ── 8px grid spacing on panels ── */
+.pin-sheet-inner { padding: 20px !important; }
+.stats-overlay-inner { padding: 24px !important; }
+
+/* ── 250ms transitions everywhere ── */
+*, *::before, *::after {
+  transition-duration: 250ms;
+  transition-timing-function: ease;
+}
+/* Exclude animation-driven elements from the blanket rule ── */
+.loader-logo, .orb, .live-badge, .ticker-track { transition: none !important; }
