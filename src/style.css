@@ -1144,6 +1144,39 @@ body.cinematic-on #layers-panel {
 .yr-pindot { position: absolute; width: 12px; height: 12px; border-radius: 50% 50% 50% 0; background: #ffce6a; transform: rotate(-45deg) scale(0); box-shadow: 0 0 10px rgba(255, 206, 106, 0.7); animation: pin-pop 0.5s ease forwards; }
 @keyframes pin-pop { to { transform: rotate(-45deg) scale(1); } }
 
+/* ── Cloud sync status indicator ─────────────────────────────────────────── */
+#sync-status {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+  padding: 6px 16px; border-radius: 999px;
+  background: rgba(10, 10, 28, 0.88); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  font-size: 12px; letter-spacing: 0.04em;
+  color: rgba(233, 238, 252, 0.9); border: 1px solid rgba(255, 255, 255, 0.12);
+  opacity: 0; transition: opacity 0.3s ease; pointer-events: none; z-index: 200;
+  white-space: nowrap;
+}
+#sync-status.show { opacity: 1; }
+#sync-status.syncing { color: #7fb8ff; border-color: rgba(127, 184, 255, 0.4); }
+#sync-status.saved   { color: #00e5cc; border-color: rgba(0, 229, 204, 0.4); }
+#sync-status.offline { color: #ff9a72; border-color: rgba(255, 154, 114, 0.4); }
+
+/* ── Shared-globe viewer banner ───────────────────────────────────────────── */
+.viewer-banner {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 14px;
+  padding: 9px 18px; border-radius: 999px;
+  background: rgba(10, 10, 28, 0.9); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border: 1px solid rgba(127, 184, 255, 0.35);
+  color: #e9eefb; font-size: 14px; white-space: nowrap; z-index: 200;
+}
+.viewer-banner[hidden] { display: none; }
+.viewer-cta {
+  padding: 5px 14px; border-radius: 999px;
+  background: linear-gradient(135deg, #4fc3f7, #7a9bff);
+  color: #fff; text-decoration: none; font-size: 12px; font-weight: 600;
+  transition: filter 0.15s ease;
+}
+.viewer-cta:hover { filter: brightness(1.15); }
+
 @media (max-width: 640px) {
   .challenges-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
   .surprise-card { bottom: 70px; }

@@ -21,6 +21,7 @@ import { createCinematic } from './cinematic.js';
 import { getSunDirection } from './sun.js';
 import { tween, updateTweens } from './tween.js';
 import { SoundManager } from './sound.js';
+import { createCloudSync, emailSlug } from './cloudSync.js';
 
 // ── Renderer (shared by both views) ──────────────────────────────────────────
 // logarithmicDepthBuffer lets one camera handle both the 1-unit Earth and the
@@ -83,6 +84,14 @@ btnSound.addEventListener('click', () => {
   btnSound.setAttribute('aria-pressed', String(on));
 });
 
+// ── Cloud sync (Supabase) ─────────────────────────────────────────────────────
+const cloudSync = createCloudSync();
+
+function getCurrentUserEmail() {
+  try { const u = JSON.parse(localStorage.getItem('wanderglobe_user')); return (u && u.email) ? u.email : null; }
+  catch (e) { return null; }
+}
+
 // ── Travel pins, trips, flight paths, stats, profile (Earth close-up view) ────
 const pins = createPinManager({ earthView, sound, setHint, earthHint: EARTH_HINT });
 let countries = null; // the country-fill layer (created below); stats reads its live count
@@ -91,7 +100,14 @@ const stats = createStatsOverlay({
   getTrips: pins.getTrips,
   getCountryCount: () => (countries ? countries.visitedCountryCount() : null),
 });
-const profile = createProfile({ getCounts: pins.getCounts });
+const profile = createProfile({
+  getCounts: pins.getCounts,
+  onSave: (user) => { if (user && user.email) cloudSync.upsertUser(user); },
+  getShareUrl: () => {
+    const email = getCurrentUserEmail();
+    return email ? `https://earth-simulator-two.vercel.app/globe?share=${emailSlug(email)}` : '';
+  },
+});
 
 btnPin.addEventListener('click', () => { sound.click(); pins.toggleMode(); });
 document.getElementById('btn-flights').addEventListener('click', () => { sound.click(); pins.toggleFlights(); });
@@ -131,7 +147,15 @@ countries.onReady(() => {
 // Fan a single pin-change event out to every interested subsystem (country
 // fills, challenge checks, trip-planner waypoints — registered as they're built).
 const pinChangeHooks = [() => { if (countriesReadyFlag && countriesOn) countries.rebuild(); }];
-pins.setOnChange(() => { for (const fn of pinChangeHooks) { try { fn(); } catch (e) {} } });
+pins.setOnChange(() => {
+  for (const fn of pinChangeHooks) { try { fn(); } catch (e) {} }
+  // Push the updated store to Supabase after every mutation.
+  const email = getCurrentUserEmail();
+  if (email) {
+    cloudSync.pushPins(pins.getPins(), email);
+    cloudSync.pushTrips(pins.getTrips(), email);
+  }
+});
 
 // ── Layers popover + toggle switches ─────────────────────────────────────────
 const btnLayers = document.getElementById('btn-layers');
@@ -249,6 +273,38 @@ document.getElementById('stats-suggest').addEventListener('click', () => { stats
 document.getElementById('stats-year').addEventListener('click', () => { stats.close(); yearReview.open(); });
 document.getElementById('profile-suggest').addEventListener('click', () => { profile.close(); aiSuggester.open(); });
 
+// Wire challenge unlock → Supabase
+challenges.setOnUnlock((id, date) => {
+  const email = getCurrentUserEmail();
+  if (email) cloudSync.saveChallenge(email, id, date);
+});
+
+// "Share My Globe" button — copy the share URL to clipboard
+document.getElementById('profile-share-btn').addEventListener('click', () => {
+  const email = getCurrentUserEmail();
+  const note = document.getElementById('profile-share-note');
+  if (!email) { if (note) note.textContent = 'Sign in to generate a share link.'; return; }
+  const url = `https://earth-simulator-two.vercel.app/globe?share=${emailSlug(email)}`;
+  navigator.clipboard.writeText(url).then(
+    () => { if (note) note.textContent = '✓ Link copied!'; },
+    () => { if (note) note.textContent = url; }
+  );
+  if (sound) sound.chime();
+});
+
+// ── Shared globe viewer (read-only, ?share=slug in URL) ──────────────────────
+const _shareSlug = new URLSearchParams(window.location.search).get('share');
+if (_shareSlug) {
+  cloudSync.fetchSharedGlobe(_shareSlug).then((globe) => {
+    if (!globe) return;
+    const banner = document.getElementById('viewer-banner');
+    const ownerName = globe.user && globe.user.name ? (globe.user.name + "'s") : 'a';
+    document.getElementById('viewer-name').textContent = `👁 Viewing ${ownerName} Globe`;
+    banner.hidden = false;
+    pins.loadSharedPins(globe.pins, globe.trips);
+  });
+}
+
 // ── Loading screen ─────────────────────────────────────────────────────────
 // Hold the globe behind a full-screen loader until every texture is in, then
 // fade through. `ready` gates all interaction until that's done.
@@ -276,9 +332,27 @@ function revealGlobe() {
   loaderFill.style.transform = 'scaleX(1)';
   loaderEl.classList.add('done');
   earthView.controls.enabled = true;
-  pins.showChrome();
+  if (!_shareSlug) pins.showChrome(); // hide all pin chrome in viewer mode
   setHint(EARTH_HINT);
   showWelcomeBack();
+  doCloudPullOnLoad(); // async, non-blocking — updates pin layer when data arrives
+}
+
+// Pull cloud state once per session; merges into the live pin layer seamlessly.
+async function doCloudPullOnLoad() {
+  const email = getCurrentUserEmail();
+  if (!email) return;
+  try {
+    const [cloudPins, cloudTrips, cloudUnlocked] = await Promise.all([
+      cloudSync.pullPins(email, pins.getPins()),
+      cloudSync.pullTrips(email, pins.getTrips()),
+      cloudSync.pullChallenges(email, null),
+    ]);
+    if (cloudPins || cloudTrips) {
+      pins.replaceStore(cloudPins || pins.getPins(), cloudTrips || pins.getTrips());
+    }
+    if (cloudUnlocked) challenges.setMergeUnlocked(cloudUnlocked);
+  } catch (e) { /* offline — localStorage remains the source */ }
 }
 
 // Returning visitor (name saved by the landing page) → a gentle toast.

@@ -48,7 +48,7 @@ function compressImage(file) {
   });
 }
 
-export function createProfile({ getCounts }) {
+export function createProfile({ getCounts, onSave, getShareUrl }) {
   const panel = $('profile-panel');
   const btn = $('btn-profile');
   const avatarSmall = $('profile-avatar');
@@ -99,7 +99,7 @@ export function createProfile({ getCounts }) {
       `<span><b>${c.visited}</b> visited</span><span class="dot"></span>` +
       `<span><b>${c.wishlist}</b> wishlist</span><span class="dot"></span>` +
       `<span><b>${c.trips}</b> trips</span>`;
-    linkEl.textContent = `earth-simulator-two.vercel.app/globe?user=${slug(user.name)}`;
+    linkEl.textContent = getShareUrl ? getShareUrl() : `earth-simulator-two.vercel.app/globe?user=${slug(user.name)}`;
   }
 
   function openPanel() {
@@ -147,6 +147,7 @@ export function createProfile({ getCounts }) {
     if (editAvatar !== null) user.avatar = editAvatar || null;
     if (!user.memberSince) user.memberSince = String(new Date().getFullYear());
     saveUser(user);
+    if (onSave) onSave(user);
     closeForm();
     render();
     renderAvatarButton();

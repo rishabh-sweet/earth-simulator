@@ -402,6 +402,31 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     return true;
   }
 
+  // Replace the entire pin + trip store (called by cloud sync on initial load).
+  // Supabase wins: overwrites localStorage and refreshes the 3D layer in-place.
+  function replaceStore(newPins, newTrips) {
+    for (const p of store) layer.removePin(p.id);
+    if (Array.isArray(newTrips)) trips = newTrips;
+    if (Array.isArray(newPins))  store = newPins;
+    for (const p of store) layer.addPin(renderData(p));
+    try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {}
+    try { localStorage.setItem(TRIPS_KEY, JSON.stringify(trips)); } catch (e) {}
+    renderStats();
+    rebuildFlights();
+    notifyChange();
+  }
+
+  // Load another user's pins in read-only mode (shared globe viewer).
+  // Clears the normal store/chrome so editing is not possible.
+  function loadSharedPins(sharedPins, sharedTrips) {
+    for (const p of store) layer.removePin(p.id);
+    store = [];
+    trips = sharedTrips || [];
+    for (const p of (sharedPins || [])) layer.addPin(renderData(p));
+    hideChrome();
+    renderStats();
+  }
+
   // ── Info card ─────────────────────────────────────────────────────────────────
   function openCard(id) {
     const pin = store.find((p) => p.id === id);
@@ -614,6 +639,7 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     toggleMode, isPinMode, panelOpen,
     showChrome, hideChrome, closePanels,
     pickPin, openAdd, openCard, openEdit, addWishlistPin,
+    replaceStore, loadSharedPins,
     toggleFlights, openTrips, setOnChange: (fn) => { changeListener = fn; },
     getPins: () => store,
     getTrips: () => trips,

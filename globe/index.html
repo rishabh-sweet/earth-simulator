@@ -320,7 +320,8 @@
         <div class="profile-link">
           <label>My public link</label>
           <div id="profile-public-link" class="public-link"></div>
-          <span class="public-link-note">Coming soon — share your globe with anyone.</span>
+          <button type="button" id="profile-share-btn" class="btn-primary full">🔗 Share My Globe</button>
+          <span id="profile-share-note" class="public-link-note"></span>
         </div>
 
         <button type="button" id="profile-edit" class="btn-ghost full">Edit Profile</button>
@@ -418,6 +419,15 @@
         <path d="M16 9l5 6M21 9l-5 6" />
       </svg>
     </button>
+
+    <!-- Cloud sync status indicator (☁️ Syncing… / ✓ Saved / ⚠️ Offline) -->
+    <div id="sync-status" class="sync-status" aria-live="polite"></div>
+
+    <!-- Shared globe viewer banner (shown when ?share= URL param is present) -->
+    <div id="viewer-banner" class="viewer-banner" hidden>
+      <span id="viewer-name">👁 Viewing a Globe</span>
+      <a href="/" class="viewer-cta">Create your own →</a>
+    </div>
 
     <script type="module" src="/src/main.js"></script>
   </body>

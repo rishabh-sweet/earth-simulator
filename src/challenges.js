@@ -68,6 +68,7 @@ export function createChallenges({ getPins, getTrips, sound }) {
 
   let state = loadState();
   let open = false;
+  let unlockListener = null;
 
   function persist() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
@@ -127,6 +128,7 @@ export function createChallenges({ getPins, getTrips, sound }) {
       if (c.test(facts)) {
         state.unlocked[c.id] = new Date().toISOString();
         newlyUnlocked.push(c);
+        if (unlockListener) unlockListener(c.id, state.unlocked[c.id]);
       }
     }
     if (newlyUnlocked.length) {
@@ -216,5 +218,19 @@ export function createChallenges({ getPins, getTrips, sound }) {
     persist();
   })();
 
-  return { check, markCinematicUsed, open: openOverlay, close, isOpen: () => open };
+  // Merge an unlock map fetched from Supabase into local state (union, never remove).
+  function setMergeUnlocked(map) {
+    if (!map || typeof map !== 'object') return;
+    let changed = false;
+    for (const [id, date] of Object.entries(map)) {
+      if (!state.unlocked[id]) { state.unlocked[id] = date; changed = true; }
+    }
+    if (changed) { persist(); if (open) render(); }
+  }
+
+  return {
+    check, markCinematicUsed, open: openOverlay, close, isOpen: () => open,
+    setOnUnlock: (fn) => { unlockListener = fn; },
+    setMergeUnlocked,
+  };
 }
