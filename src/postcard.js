@@ -267,12 +267,12 @@ export function showPostcardModal(pin, trip) {
     try {
       canvas.toBlob(async (blob) => {
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-        cpBtn.textContent = '✓ Copied!';
-        setTimeout(() => { cpBtn.textContent = '📋 Copy'; }, 2000);
+        cpBtn.textContent = 'Copied!';
+        setTimeout(() => { cpBtn.textContent = 'Copy'; }, 2000);
       }, 'image/png');
     } catch {
       cpBtn.textContent = 'Copy failed';
-      setTimeout(() => { cpBtn.textContent = '📋 Copy'; }, 2000);
+      setTimeout(() => { cpBtn.textContent = 'Copy'; }, 2000);
     }
   };
 

@@ -114,7 +114,7 @@ export function createYearReview({ getPins, getTrips, sound }) {
         ${s.first && s.first.photoBase64 ? `<img class="yr-photo" src="${s.first.photoBase64}" alt="" />` : ''}</div>`,
 
       `<div class="yr-slide">${miniGlobe('big')}
-        <div class="yr-big small">See you in ${next} 🌍</div>
+        <div class="yr-big small">See you in ${next}</div>
         <button id="year-share" class="btn-primary" type="button">Share my ${s.y} Wrapped</button>
         <div id="year-share-note" class="yr-share-note"></div></div>`,
     ];
@@ -185,7 +185,7 @@ export function createYearReview({ getPins, getTrips, sound }) {
 
   function share() {
     const s = compute(year);
-    const text = `My ${year} in travel: ${s.countries} countries, ${s.pins} pins, travel score ${s.score}/1000. Built on Wanderglobe 🌍`;
+    const text = `My ${year} in travel: ${s.countries} countries, ${s.pins} pins, travel score ${s.score}/1000. Built on Wanderglobe`;
     const note = $('year-share-note');
     navigator.clipboard.writeText(text).then(
       () => { if (note) note.textContent = 'Copied to clipboard!'; },

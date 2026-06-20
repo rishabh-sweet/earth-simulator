@@ -178,7 +178,11 @@ const swSeismic = document.getElementById('sw-seismic');
 const swCountries = document.getElementById('sw-countries');
 const swTerminator = document.getElementById('sw-terminator');
 
-function setSwitch(el, on) { el.classList.toggle('on', on); el.setAttribute('aria-checked', String(on)); }
+function setSwitch(el, on) {
+  el.classList.toggle('on', on);
+  el.setAttribute('aria-checked', String(on));
+  if (el instanceof HTMLInputElement) el.checked = on;
+}
 
 function openLayers() { layersPanel?.classList.add('open'); layersPanel?.setAttribute('aria-hidden', 'false'); btnLayers?.classList.add('active'); }
 function closeLayers() { layersPanel?.classList.remove('open'); layersPanel?.setAttribute('aria-hidden', 'true'); btnLayers?.classList.remove('active'); }
@@ -480,7 +484,7 @@ if (_shareSlug) {
     if (!globe) return;
     const banner = document.getElementById('viewer-banner');
     const ownerName = globe.user && globe.user.name ? (globe.user.name + "'s") : 'a';
-    document.getElementById('viewer-name').textContent = `👁 Viewing ${ownerName} Globe`;
+    document.getElementById('viewer-name').textContent = `Viewing ${ownerName} Globe`;
     banner.hidden = false;
     pins.loadSharedPins(globe.pins, globe.trips);
   });
@@ -898,7 +902,7 @@ window.addEventListener('pointerup', (e) => {
         if (fd) {
           featureBadge.textContent = fd.callsign || 'Flight';
           featureBadge.className = 'feature-badge volcano';
-          featureTitle.textContent = `✈️ ${fd.callsign || fd.icao24}`;
+          featureTitle.textContent = `${fd.callsign || fd.icao24}`;
           featureBody.innerHTML =
             fbRow('Country', fd.country || '—') +
             fbRow('Altitude', fd.altM != null ? `${Math.round(fd.altM).toLocaleString()} m` : '—') +
@@ -923,7 +927,7 @@ window.addEventListener('pointerup', (e) => {
           const info = issTracker.getInfo();
           featureBadge.textContent = 'ISS';
           featureBadge.className = 'feature-badge volcano';
-          featureTitle.textContent = '🛸 International Space Station';
+          featureTitle.textContent = 'International Space Station';
           featureBody.innerHTML =
             fbRow('Altitude', '408 km') +
             fbRow('Speed', '27,600 km/h') +

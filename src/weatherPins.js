@@ -6,19 +6,19 @@ const CACHE_KEY  = 'wanderglobe_weather';
 const CACHE_TTL  = 3600 * 1000; // 1 hour
 const BATCH_DELAY = 120; // ms between Open-Meteo requests
 
-// WMO weather codes → emoji
+// WMO weather codes → text label
 function wmoEmoji(code) {
-  if (code == null) return '🌡️';
-  if (code === 0) return '☀️';
-  if (code <= 2) return '🌤️';
-  if (code <= 3) return '⛅';
-  if (code <= 49) return '🌫️';
-  if (code <= 67) return '🌧️';
-  if (code <= 77) return '❄️';
-  if (code <= 82) return '🌧️';
-  if (code <= 86) return '🌨️';
-  if (code <= 99) return '⛈️';
-  return '🌡️';
+  if (code == null) return '—';
+  if (code === 0) return 'Clear';
+  if (code <= 2) return 'Partly Cloudy';
+  if (code <= 3) return 'Overcast';
+  if (code <= 49) return 'Foggy';
+  if (code <= 67) return 'Rain';
+  if (code <= 77) return 'Snow';
+  if (code <= 82) return 'Rain';
+  if (code <= 86) return 'Snow';
+  if (code <= 99) return 'Storm';
+  return '—';
 }
 
 function wmoLabel(code) {
@@ -138,7 +138,7 @@ export function createWeatherPins(earthMesh, { getPins }) {
       if (!w) return '';
       const parts = [w.emoji, w.condition];
       if (w.tempC != null) parts.push(`${w.tempC}°C`);
-      if (w.windKmh != null) parts.push(`💨 ${w.windKmh} km/h`);
+      if (w.windKmh != null) parts.push(`Wind: ${w.windKmh} km/h`);
       return `<div class="pin-weather">${parts.join(' · ')}</div>`;
     },
 

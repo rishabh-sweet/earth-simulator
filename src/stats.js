@@ -129,7 +129,7 @@ export function createStatsOverlay({ getPins, getTrips, getCountryCount }) {
 
   function render() {
     const s = compute();
-    lastSummary = `I've visited ${s.countries} countries across ${s.continents.length} continents. Travel score: ${s.score}/1000 🌍 #Wanderglobe`;
+    lastSummary = `I've visited ${s.countries} countries across ${s.continents.length} continents. Travel score: ${s.score}/1000 #Wanderglobe`;
 
     const contChips = CONTINENTS.map((c) =>
       `<span class="cont-chip ${s.continentCounts[c] ? 'on' : ''}">${c}</span>`).join('');

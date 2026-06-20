@@ -1,6 +1,6 @@
 // Cloud sync layer over Supabase. Supabase is the source of truth; localStorage
 // is a fast local cache. Every operation is wrapped so a network/Supabase failure
-// degrades silently to localStorage and surfaces a "⚠️ Offline" indicator.
+// degrades silently to localStorage and surfaces an "Offline" indicator.
 //
 // Tables (see supabase/schema.sql):
 //   users      (email pk, slug unique, name, data jsonb)
@@ -10,7 +10,7 @@
 
 import { supabase } from './supabase.js';
 
-// ── Status indicator ("☁️ Syncing…" / "✓ Saved" / "⚠️ Offline") ─────────────
+// ── Status indicator ("Syncing…" / "Saved" / "Offline") ─────────────
 let inflight = 0;
 let errored = false;
 let hideTimer = null;
@@ -28,14 +28,14 @@ function begin() {
   if (inflight === 0) errored = false;
   inflight++;
   if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
-  setStatus('syncing', '☁️ Syncing…');
+  setStatus('syncing', 'Syncing…');
 }
 function end(ok) {
   if (!ok) errored = true;
   inflight = Math.max(0, inflight - 1);
   if (inflight > 0) return;
-  if (errored) { setStatus('offline', '⚠️ Offline'); hideTimer = setTimeout(hideStatus, 2600); }
-  else { setStatus('saved', '✓ Saved'); hideTimer = setTimeout(hideStatus, 2000); }
+  if (errored) { setStatus('offline', 'Offline'); hideTimer = setTimeout(hideStatus, 2600); }
+  else { setStatus('saved', 'Saved'); hideTimer = setTimeout(hideStatus, 2000); }
 }
 
 // Run a Supabase task with the status indicator; returns its value, or undefined

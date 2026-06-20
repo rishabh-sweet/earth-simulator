@@ -49,14 +49,14 @@ export function createSurprise({ getPins, addWishlistPin, flyTo, sound }) {
       </div>
       <div class="surprise-fact">${c.fact || ''}</div>
       <div class="surprise-actions">
-        <button id="surprise-pin" class="btn-primary" type="button">📍 Pin to Wishlist</button>
-        <button id="surprise-again" class="btn-ghost" type="button">🎲 Surprise me again</button>
+        <button id="surprise-pin" class="btn-primary" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg> Pin to Wishlist</button>
+        <button id="surprise-again" class="btn-ghost" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg> Surprise me again</button>
       </div>`;
     $('surprise-close').addEventListener('click', close);
     $('surprise-pin').addEventListener('click', () => {
       if (addWishlistPin(c.lat, c.lng, `${c.capital}, ${c.name}`)) {
         const b = $('surprise-pin');
-        b.textContent = '✓ Pinned!';
+        b.textContent = 'Pinned!';
         b.disabled = true;
       }
     });

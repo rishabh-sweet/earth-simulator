@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 // terminator.js — a glowing golden ring drawn exactly along the day/night
 // terminator (the great circle separating the sunlit half of the Earth from
-// the dark half), plus "🌅 Sunrise" / "🌇 Sunset" labels where that line
+// the dark half), plus "Sunrise" / "Sunset" labels where that line
 // crosses the equator.
 //
 // How it works in one breath: the terminator is the set of surface points
@@ -115,8 +115,8 @@ export function createTerminator(scene) {
   // Labels live in a SEPARATE group added straight to the scene, so the ring's
   // rotation never spins them — we place them in world space ourselves.
   const labelGroup = new THREE.Group();
-  const sunriseSprite = makeLabelSprite('🌅 Sunrise');
-  const sunsetSprite = makeLabelSprite('🌇 Sunset');
+  const sunriseSprite = makeLabelSprite('Sunrise');
+  const sunsetSprite = makeLabelSprite('Sunset');
   labelGroup.add(sunriseSprite, sunsetSprite);
   scene.add(labelGroup);
 

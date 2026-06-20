@@ -472,7 +472,7 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 600; line-height: 1
 .feat-list { list-style: none; margin-top: 20px; display: flex; flex-direction: column; gap: 9px; }
 .feat-list li { position: relative; padding-left: 26px; font-size: 14.5px; color: rgba(255, 255, 255, 0.82); }
 .feat-list li::before {
-  content: '✓';
+  content: '\2713';
   position: absolute; left: 0; top: -1px;
   color: var(--mint); font-weight: 700;
 }

@@ -11,20 +11,20 @@ import { findCountryByName } from './countryData.js';
 const KEY = 'wanderglobe_challenges';
 const $ = (id) => document.getElementById(id);
 
-// id, emoji, title, description, and a predicate over the computed `facts`.
+// id, icon, title, description, and a predicate over the computed `facts`.
 const CHALLENGES = [
-  { id: 'first',     emoji: '🌍', title: 'First Steps',    desc: 'Add your first pin',                test: (f) => f.totalPins >= 1 },
-  { id: 'flyer',     emoji: '✈️', title: 'Frequent Flyer', desc: 'Visit 5 countries',                 test: (f) => f.visitedCountries >= 5 },
-  { id: 'citizen',   emoji: '🌐', title: 'World Citizen',  desc: 'Visit 20 countries',                test: (f) => f.visitedCountries >= 20 },
-  { id: 'legend',    emoji: '🗺️', title: 'Legend',         desc: 'Visit 50 countries',                test: (f) => f.visitedCountries >= 50 },
-  { id: 'island',    emoji: '🌊', title: 'Island Hopper',  desc: 'Pin 3 island nations',              test: (f) => f.islandNations >= 3 },
-  { id: 'summit',    emoji: '🏔️', title: 'Summit Seeker',  desc: 'Pin Nepal, Peru, or Switzerland',   test: (f) => f.summitSeeker },
-  { id: 'sunrise',   emoji: '🌅', title: 'Sunrise Chaser', desc: 'Add a pin at 5–7am local time',     test: (f) => f.sunrisePin },
-  { id: 'planner',   emoji: '🤝', title: 'Planner',        desc: 'Create your first trip collection', test: (f) => f.trips >= 1 },
-  { id: 'director',  emoji: '🎬', title: 'Director',       desc: 'Use cinematic mode',                test: (f) => f.cinematic },
-  { id: 'seven',     emoji: '7️⃣', title: 'Seven Summits',  desc: 'Pin all 7 continents',              test: (f) => f.continents >= 7 },
-  { id: 'nightowl',  emoji: '🌙', title: 'Night Owl',      desc: 'Add a pin after midnight local time', test: (f) => f.nightPin },
-  { id: 'dreamer',   emoji: '💫', title: 'Dreamer',        desc: 'Add 10 wishlist pins',              test: (f) => f.wishlistPins >= 10 },
+  { id: 'first',     icon: '<path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>', title: 'First Steps',    desc: 'Add your first pin',                test: (f) => f.totalPins >= 1 },
+  { id: 'flyer',     icon: '<path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/>', title: 'Frequent Flyer', desc: 'Visit 5 countries',                 test: (f) => f.visitedCountries >= 5 },
+  { id: 'citizen',   icon: '<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>', title: 'World Citizen',  desc: 'Visit 20 countries',                test: (f) => f.visitedCountries >= 20 },
+  { id: 'legend',    icon: '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>', title: 'Legend',         desc: 'Visit 50 countries',                test: (f) => f.visitedCountries >= 50 },
+  { id: 'island',    icon: '<path d="M2 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0"/><path d="M2 18c2-4 4-4 6 0s4 4 6 0 4-4 6 0"/>', title: 'Island Hopper',  desc: 'Pin 3 island nations',              test: (f) => f.islandNations >= 3 },
+  { id: 'summit',    icon: '<polygon points="12 2 22 20 2 20"/><polyline points="8 14 12 10 16 14"/>', title: 'Summit Seeker',  desc: 'Pin Nepal, Peru, or Switzerland',   test: (f) => f.summitSeeker },
+  { id: 'sunrise',   icon: '<circle cx="12" cy="12" r="4"/><path d="M12 3v2m0 14v2M3 12h2m14 0h2"/>', title: 'Sunrise Chaser', desc: 'Add a pin at 5–7am local time',     test: (f) => f.sunrisePin },
+  { id: 'planner',   icon: '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2"/>', title: 'Planner',        desc: 'Create your first trip collection', test: (f) => f.trips >= 1 },
+  { id: 'director',  icon: '<rect x="2" y="7" width="13" height="10" rx="1"/><path d="M15 9l6-3v12l-6-3"/>', title: 'Director',       desc: 'Use cinematic mode',                test: (f) => f.cinematic },
+  { id: 'seven',     icon: '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2"/>', title: 'Seven Summits',  desc: 'Pin all 7 continents',              test: (f) => f.continents >= 7 },
+  { id: 'nightowl',  icon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>', title: 'Night Owl',      desc: 'Add a pin after midnight local time', test: (f) => f.nightPin },
+  { id: 'dreamer',   icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>', title: 'Dreamer',        desc: 'Add 10 wishlist pins',              test: (f) => f.wishlistPins >= 10 },
 ];
 
 const CONTINENTS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania', 'Antarctica'];
@@ -161,7 +161,7 @@ export function createChallenges({ getPins, getTrips, sound }) {
     }).join('');
     toast.innerHTML =
       `<div class="confetti">${confetti}</div>` +
-      `<div class="ct-badge">${c.emoji}</div>` +
+      `<div class="ct-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">${c.icon}</svg></div>` +
       `<div class="ct-text"><span class="ct-eyebrow">Challenge unlocked</span>` +
       `<span class="ct-title">${c.title}</span><span class="ct-desc">${c.desc}</span></div>`;
     toast.classList.add('show');
@@ -181,7 +181,7 @@ export function createChallenges({ getPins, getTrips, sound }) {
         ? new Date(date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
         : '';
       return `<div class="challenge-card ${unlocked ? 'unlocked' : 'locked'}">
-        <div class="ch-emoji">${unlocked ? c.emoji : '🔒'}</div>
+        <div class="ch-emoji">${unlocked ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">${c.icon}</svg>` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`}</div>
         <div class="ch-title">${c.title}</div>
         <div class="ch-desc">${c.desc}</div>
         <div class="ch-foot">${unlocked ? 'Unlocked ' + when : 'Locked'}</div>

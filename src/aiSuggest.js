@@ -58,7 +58,7 @@ export function createAISuggester({ getPins, addWishlistPin, sound }) {
   function renderKeyPrompt() {
     body.innerHTML = `
       <div class="ai-keybox">
-        <div class="ai-key-icon">🔑</div>
+        <div class="ai-key-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="24" height="24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg></div>
         <h3>Enter your Anthropic API key to unlock AI suggestions</h3>
         <input id="ai-key-input" type="password" placeholder="sk-ant-..." autocomplete="off" />
         <button id="ai-key-save" class="btn-primary" type="button">Unlock suggestions</button>
@@ -79,7 +79,7 @@ export function createAISuggester({ getPins, addWishlistPin, sound }) {
   function renderLoading() {
     body.innerHTML = `
       <div class="ai-loading">
-        <div class="ai-spark">✨</div>
+        <div class="ai-spark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="24" height="24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
         <div class="ai-loading-text">Claude is thinking<span class="ai-dots"><i>.</i><i>.</i><i>.</i></span></div>
       </div>`;
   }
@@ -87,7 +87,7 @@ export function createAISuggester({ getPins, addWishlistPin, sound }) {
   function renderError(msg) {
     body.innerHTML = `
       <div class="ai-error">
-        <div class="ai-error-icon">😕</div>
+        <div class="ai-error-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="24" height="24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
         <p>${msg || "Couldn't get suggestions right now."}</p>
         <div class="ai-error-actions">
           <button id="ai-retry" class="btn-primary" type="button">Try again</button>
@@ -166,16 +166,16 @@ export function createAISuggester({ getPins, addWishlistPin, sound }) {
         <div class="ai-card-month">${esc(s.bestMonth || '')}</div>
         <h3 class="ai-card-dest">${country ? country.flag + ' ' : ''}${esc(s.destination || 'Somewhere')}</h3>
         <p class="ai-card-reason">${esc(s.reason || '')}</p>
-        <div class="ai-card-must"><span>✶ Must-do</span> ${esc(s.mustDo || '')}</div>
+        <div class="ai-card-must"><span>Must-do</span> ${esc(s.mustDo || '')}</div>
         <div class="ai-card-foot">
           <span class="ai-budget ${bClass}">${budget}</span>
           ${canPin
-            ? `<button class="ai-pin btn-ghost" type="button" data-i="${i}">📍 Pin to Wishlist</button>`
+            ? `<button class="ai-pin btn-ghost" type="button" data-i="${i}">Pin to Wishlist</button>`
             : `<span class="ai-nopin">No coordinates</span>`}
         </div>
       </div>`;
     }).join('');
-    body.innerHTML = `<p class="ai-eyebrow">✨ Claude suggests</p><div class="ai-cards">${cards}</div>
+    body.innerHTML = `<p class="ai-eyebrow">Claude suggests</p><div class="ai-cards">${cards}</div>
       <button id="ai-again" class="btn-ghost full" type="button">Suggest again</button>`;
     $('ai-again').addEventListener('click', run);
     body.querySelectorAll('.ai-pin').forEach((b) => b.addEventListener('click', () => {

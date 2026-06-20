@@ -58,99 +58,157 @@
 
     <!-- Buttons + on-screen hint -->
     <button id="btn-back" class="ui-btn">← Back</button>
-    <button id="btn-earth" class="ui-btn">⌂ Earth view</button>
+    <button id="btn-earth" class="ui-btn">Earth view</button>
     <div id="hint"></div>
 
     <!-- "Pin here?" prompt shown after flying to a search result -->
     <div id="search-pin-prompt" class="search-pin-prompt" hidden>
-      <button id="search-pin-btn" type="button">📍 Pin here?</button>
+      <button id="search-pin-btn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="14" height="14" aria-hidden="true"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        Pin here?
+      </button>
       <button id="search-pin-dismiss" class="search-pin-x" type="button" aria-label="Dismiss">×</button>
     </div>
 
-    <!-- Earth-view tool cluster (top-right; only in the Earth close-up view) -->
+    <!-- Earth-view tool cluster — 3 glass pills (only visible in Earth view) -->
     <div id="earth-tools">
-      <button id="btn-layers" class="ui-icon" aria-label="Map layers" aria-expanded="false">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 2 2 7l10 5 10-5-10-5z" />
-          <path d="M2 12l10 5 10-5" />
-          <path d="M2 17l10 5 10-5" />
-        </svg>
-      </button>
-      <button id="btn-cinematic" class="ui-icon" aria-label="Cinematic mode">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3" y="6" width="18" height="13" rx="2" />
-          <path d="M3 10h18M8.5 6 6.5 10M13.5 6l-2 4M18.5 6l-2 4" />
-        </svg>
-      </button>
-      <button id="btn-flights" class="ui-icon" aria-label="Toggle flight paths" aria-pressed="false">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M22 2 11 13" />
-          <path d="M22 2l-7 20-4-9-9-4 20-7z" />
-        </svg>
-      </button>
-      <button id="btn-trips" class="ui-icon" aria-label="My trips">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M3 7a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
-        </svg>
-      </button>
-      <button id="btn-stats" class="ui-icon" aria-label="My stats">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M5 20V11M12 20V4M19 20v-6M3 20h18" />
-        </svg>
-      </button>
-      <button id="btn-planner" class="ui-icon ui-emoji" aria-label="Plan a trip" title="Plan Trip">🗺️</button>
-      <button id="btn-surprise" class="ui-icon ui-emoji" aria-label="Surprise me" title="Surprise Me">🎲</button>
-      <button id="btn-challenges" class="ui-icon ui-emoji" aria-label="Challenges" title="Challenges">🏆</button>
-      <button id="btn-screenshot" class="ui-icon ui-emoji" aria-label="Screenshot" title="Screenshot / Clean Mode">📸</button>
-      <button id="btn-pin" class="ui-icon pin-toggle" aria-label="Toggle pin mode" aria-pressed="false">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z" />
-          <circle cx="12" cy="10" r="2.6" />
-        </svg>
-      </button>
-      <button id="btn-profile" class="profile-btn" aria-label="Profile">
-        <span id="profile-avatar" class="profile-avatar"></span>
-      </button>
+
+      <!-- Top-left vertical pill: brand / layers / search / pin / screenshot -->
+      <div id="toolbar-left" class="toolbar-pill">
+        <a id="brand" href="/" class="t-btn t-logo" aria-label="Wanderglobe — home">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" width="26" height="26" aria-hidden="true">
+            <defs><linearGradient id="wgBrand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4A90E2"/><stop offset="1" stop-color="#FF6B6B"/></linearGradient></defs>
+            <circle cx="24" cy="29" r="12" stroke="url(#wgBrand)" stroke-width="1.5" fill="none"/>
+            <ellipse cx="24" cy="29" rx="12" ry="4" stroke="url(#wgBrand)" stroke-width="1.2" fill="none"/>
+            <ellipse cx="24" cy="29" rx="4.5" ry="12" stroke="url(#wgBrand)" stroke-width="1.2" fill="none"/>
+            <path d="M24 3c-3.8 0-6.8 3-6.8 6.8 0 4 6.8 11 6.8 11s6.8-7 6.8-11C30.8 6 27.8 3 24 3z" fill="url(#wgBrand)"/>
+            <path d="M24 7.5l.7 1.7 1.7.7-1.7.7-.7 1.7-.7-1.7-1.7-.7 1.7-.7z" fill="white"/>
+          </svg>
+          <span class="brand-word">Wanderglobe</span>
+        </a>
+        <div class="t-sep"></div>
+        <button id="btn-layers" class="t-btn" aria-label="Map layers" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg>
+        </button>
+        <div id="city-search"></div>
+        <button id="btn-pin" class="t-btn pin-toggle" aria-label="Toggle pin mode" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        </button>
+        <button id="btn-screenshot" class="t-btn" aria-label="Screenshot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M9 7l1.5-2.5h3L15 7"/><circle cx="12" cy="14" r="3"/></svg>
+        </button>
+      </div>
+
+      <!-- Top-right vertical pill: profile / sound -->
+      <div id="toolbar-right" class="toolbar-pill">
+        <button id="btn-profile" class="t-btn profile-btn" aria-label="Profile">
+          <span id="profile-avatar" class="profile-avatar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          </span>
+        </button>
+        <div class="t-sep"></div>
+        <button id="btn-sound" class="t-btn" aria-label="Toggle sound" aria-pressed="true">
+          <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          <svg class="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:none" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+        </button>
+      </div>
+
+      <!-- Bottom-centre horizontal pill: trip planner / challenges / stats / surprise / cinematic / year / trips -->
+      <div id="toolbar-bottom" class="toolbar-pill toolbar-pill-h">
+        <button id="btn-planner" class="t-btn" aria-label="Trip Planner" title="Trip Planner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+        </button>
+        <button id="btn-challenges" class="t-btn" aria-label="Challenges" title="Challenges">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><path d="M6 9H3v3a5 5 0 0 0 5 5m6 0a5 5 0 0 0 5-5V9h-3"/><path d="M12 17v4"/><path d="M9 21h6"/><rect x="6" y="3" width="12" height="6" rx="1"/></svg>
+        </button>
+        <button id="btn-stats" class="t-btn" aria-label="My stats" title="Stats">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/><line x1="3" y1="20" x2="21" y2="20"/></svg>
+        </button>
+        <button id="btn-surprise" class="t-btn" aria-label="Surprise Me" title="Surprise Me">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+        </button>
+        <button id="btn-cinematic" class="t-btn" aria-label="Cinematic mode" title="Cinematic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><rect x="2" y="7" width="13" height="10" rx="1"/><path d="M15 9l6-3v12l-6-3"/></svg>
+        </button>
+        <button id="btn-year" class="t-btn" aria-label="Year in Review" title="Year in Review">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </button>
+        <button id="btn-trips" class="t-btn" aria-label="My Trips" title="My Trips">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        </button>
+      </div>
+
     </div>
 
-    <!-- Layers popover (opened by the 🌍 Layers button) -->
+    <!-- Layers panel — slides from left, grouped by category -->
     <div id="layers-panel" class="layers-panel" aria-hidden="true">
-      <div class="layers-title">Map Layers</div>
-      <div class="layers-row">
-        <span class="lr-label">🌌 Aurora</span>
-        <button class="layer-switch" id="sw-aurora" role="switch" aria-checked="false"><span></span></button>
+      <div class="layers-header">
+        <span class="layers-title">Map Layers</span>
+        <button id="layers-close" class="t-btn" aria-label="Close layers" style="width:32px;height:32px;border-radius:10px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
-      <div class="layers-row">
-        <span class="lr-label">🌋 Seismic <span class="live-badge" id="seismic-live">Live</span></span>
-        <button class="layer-switch" id="sw-seismic" role="switch" aria-checked="false"><span></span></button>
+
+      <div class="layers-group">
+        <div class="layers-group-label">Earth</div>
+        <label class="layer-row">
+          <svg class="lr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M12 3v2m0 14v2M3 12h2m14 0h2m-3.3-5.7-1.4 1.4M7.7 16.3l-1.4 1.4M16.3 16.3l1.4 1.4M7.7 7.7 6.3 6.3"/></svg>
+          <span>Aurora</span>
+          <input type="checkbox" id="sw-aurora" class="layer-switch" role="switch"/>
+        </label>
+        <label class="layer-row">
+          <svg class="lr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+          <span>Countries</span>
+          <input type="checkbox" id="sw-countries" class="layer-switch" role="switch"/>
+        </label>
+        <label class="layer-row">
+          <svg class="lr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 3v2m0 14v2M3 12h2m14 0h2"/></svg>
+          <span>Day / Night</span>
+          <input type="checkbox" id="sw-terminator" class="layer-switch" role="switch" checked/>
+        </label>
+        <label class="layer-row">
+          <svg class="lr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M18 10h-1.3A6 6 0 1 0 9 20h9a4 4 0 0 0 0-8z"/></svg>
+          <span>Weather Pins</span>
+          <input type="checkbox" id="sw-weatherpins" class="layer-switch" role="switch"/>
+        </label>
+        <label class="layer-row">
+          <svg class="lr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="7" r="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          <span>Population</span>
+          <input type="checkbox" id="sw-population" class="layer-switch" role="switch"/>
+        </label>
+        <label class="layer-row">
+          <svg class="lr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M12 2c0 5-6 7-6 12a6 6 0 0 0 12 0c0-5-6-7-6-12z"/></svg>
+          <span>My Heatmap</span>
+          <input type="checkbox" id="sw-heatmap" class="layer-switch" role="switch"/>
+        </label>
       </div>
-      <div class="layers-row">
-        <span class="lr-label">🗺️ Countries</span>
-        <button class="layer-switch" id="sw-countries" role="switch" aria-checked="false"><span></span></button>
+
+      <div class="layers-group">
+        <div class="layers-group-label">Live Data</div>
+        <label class="layer-row">
+          <svg class="lr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          <span>Live Flights</span><span id="flights-live" class="live-badge" hidden>LIVE</span>
+          <input type="checkbox" id="sw-flights" class="layer-switch" role="switch"/>
+        </label>
+        <label class="layer-row">
+          <svg class="lr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+          <span>ISS Tracker</span>
+          <input type="checkbox" id="sw-iss" class="layer-switch" role="switch"/>
+        </label>
+        <label class="layer-row">
+          <svg class="lr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><polyline points="2,12 5,12 7,8 9,16 11,10 13,14 15,12 22,12"/></svg>
+          <span>Seismic</span><span id="seismic-live" class="live-badge" hidden>LIVE</span>
+          <input type="checkbox" id="sw-seismic" class="layer-switch" role="switch"/>
+        </label>
       </div>
-      <div class="layers-row">
-        <span class="lr-label">🌅 Terminator</span>
-        <button class="layer-switch on" id="sw-terminator" role="switch" aria-checked="true"><span></span></button>
-      </div>
-      <div class="layers-row">
-        <span class="lr-label">✈️ Live Flights <span class="live-badge" id="flights-live" style="display:none">Live</span></span>
-        <button class="layer-switch" id="sw-flights" role="switch" aria-checked="false"><span></span></button>
-      </div>
-      <div class="layers-row">
-        <span class="lr-label">⏱️ Time Zones</span>
-        <button class="layer-switch" id="sw-timezones" role="switch" aria-checked="false"><span></span></button>
-      </div>
-      <div class="layers-row">
-        <span class="lr-label">🌦️ Weather Pins</span>
-        <button class="layer-switch" id="sw-weatherpins" role="switch" aria-checked="false"><span></span></button>
-      </div>
-      <div class="layers-row">
-        <span class="lr-label">👥 Population</span>
-        <button class="layer-switch" id="sw-population" role="switch" aria-checked="false"><span></span></button>
-      </div>
-      <div class="layers-row">
-        <span class="lr-label">🔥 My Heatmap</span>
-        <button class="layer-switch" id="sw-heatmap" role="switch" aria-checked="false"><span></span></button>
+
+      <div class="layers-group">
+        <div class="layers-group-label">Overlays</div>
+        <label class="layer-row">
+          <svg class="lr-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,15"/></svg>
+          <span>Time Zones</span>
+          <input type="checkbox" id="sw-timezones" class="layer-switch" role="switch"/>
+        </label>
       </div>
     </div>
 
@@ -175,7 +233,7 @@
     <div id="pin-stats"></div>
 
     <!-- Live weather badge (bottom-left; pulses when fresh data lands) -->
-    <div id="weather-badge" aria-hidden="true"><span class="wb-icon">🌤</span> Live Weather</div>
+    <div id="weather-badge" aria-hidden="true"><svg class="wb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="14" height="14" aria-hidden="true"><path d="M18 10h-1.3A6 6 0 1 0 9 20h9a4 4 0 0 0 0-8z"/></svg> Live Weather</div>
 
     <!-- Add / Edit pin sheet (slides in from the right) -->
     <div id="pin-panel" class="pin-sheet">
@@ -232,7 +290,10 @@
           <button type="button" id="pin-edit" class="btn-ghost">Edit</button>
           <button type="button" id="pin-delete" class="btn-danger">Delete</button>
         </div>
-        <button type="button" id="pin-postcard" class="btn-ghost full postcard-btn">🎴 Generate Postcard</button>
+        <button type="button" id="pin-postcard" class="btn-ghost full postcard-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16" aria-hidden="true"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 9h18M9 3v6"/></svg>
+          Generate Postcard
+        </button>
         <div id="pin-delete-confirm" class="delete-confirm">
           <span>Delete this pin?</span>
           <button type="button" id="pin-delete-yes" class="btn-danger-sm">Delete</button>
@@ -294,8 +355,14 @@
         <div class="stats-grid" id="stats-grid"></div>
 
         <div class="stats-feature-row">
-          <button type="button" id="stats-suggest" class="btn-ghost">✨ Suggest My Next Trip</button>
-          <button type="button" id="stats-year" class="btn-ghost">📅 Year in Review</button>
+          <button type="button" id="stats-suggest" class="btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Suggest My Next Trip
+          </button>
+          <button type="button" id="stats-year" class="btn-ghost">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Year in Review
+          </button>
         </div>
 
         <div class="stats-share-row">
@@ -324,13 +391,19 @@
           <span class="public-link-note">Used to show visa requirements when you hover a country.</span>
         </div>
 
-        <button type="button" id="profile-suggest" class="btn-ghost full">✨ Suggest My Next Trip</button>
+        <button type="button" id="profile-suggest" class="btn-ghost full">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Suggest My Next Trip
+        </button>
         <button type="button" id="btn-signout" class="btn-ghost full signout-btn">Sign Out</button>
 
         <div class="profile-link">
           <label>My public link</label>
           <div id="profile-public-link" class="public-link"></div>
-          <button type="button" id="profile-share-btn" class="btn-primary full">🔗 Share My Globe</button>
+          <button type="button" id="profile-share-btn" class="btn-primary full">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share My Globe
+          </button>
           <span id="profile-share-note" class="public-link-note"></span>
         </div>
 
@@ -357,7 +430,7 @@
     <div id="planner-panel" class="pin-sheet">
       <div class="pin-sheet-inner">
         <button id="planner-close" class="sheet-x" aria-label="Close">×</button>
-        <h2>🗺️ Plan Trip</h2>
+        <h2>Plan Trip</h2>
         <p class="planner-hint">Drag your wishlist pins to set the order of your journey.</p>
         <ol id="planner-list" class="planner-list"></ol>
         <p id="planner-empty" class="trips-empty">Add some wishlist pins to plan a route.</p>
@@ -369,7 +442,10 @@
         </div>
 
         <div class="pin-actions">
-          <button type="button" id="planner-start" class="btn-primary">▶ Start Journey</button>
+          <button type="button" id="planner-start" class="btn-primary">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" aria-hidden="true"><polygon points="5,3 19,12 5,21"/></svg>
+            Start Journey
+          </button>
           <button type="button" id="planner-save" class="btn-ghost">Save</button>
         </div>
 
@@ -385,7 +461,7 @@
       <button id="challenges-close" class="sheet-x" aria-label="Close">×</button>
       <div class="stats-overlay-inner">
         <p class="stats-eyebrow">Collect them all</p>
-        <h2 class="stats-title">🏆 Challenges</h2>
+        <h2 class="stats-title">Challenges</h2>
         <div class="challenges-progress">
           <div class="challenges-bar"><div id="challenges-bar-fill" class="challenges-bar-fill"></div></div>
           <span id="challenges-count" class="challenges-count">0/12</span>
@@ -401,7 +477,7 @@
     <div id="ai-overlay" class="stats-overlay">
       <button id="ai-close" class="sheet-x" aria-label="Close">×</button>
       <div class="stats-overlay-inner">
-        <h2 class="stats-title">✨ Suggest My Next Trip</h2>
+        <h2 class="stats-title">Suggest My Next Trip</h2>
         <div id="ai-body" class="ai-body"></div>
       </div>
     </div>
@@ -417,24 +493,13 @@
       <div id="year-stage" class="year-stage"></div>
     </div>
 
-    <!-- Sound toggle (procedural audio; bottom-right) -->
-    <button id="btn-sound" class="ui-icon" aria-label="Toggle sound" aria-pressed="true">
-      <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M4 9v6h4l5 4V5L8 9H4z" />
-        <path d="M16.5 8.5a5 5 0 0 1 0 7" />
-        <path d="M19 6a9 9 0 0 1 0 12" />
-      </svg>
-      <svg class="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M4 9v6h4l5 4V5L8 9H4z" />
-        <path d="M16 9l5 6M21 9l-5 6" />
-      </svg>
-    </button>
+    <!-- btn-sound is now inside #toolbar-right -->
 
     <!-- Cloud sync status indicator (☁️ Syncing… / ✓ Saved / ⚠️ Offline) -->
     <div id="sync-status" class="sync-status" aria-live="polite"></div>
 
     <!-- Offline indicator -->
-    <div id="offline-banner" class="offline-banner" hidden>📡 Offline — changes will sync when reconnected</div>
+    <div id="offline-banner" class="offline-banner" hidden>Offline — changes will sync when reconnected</div>
 
     <!-- Postcard preview modal -->
     <div id="postcard-modal" class="postcard-modal" role="dialog" aria-label="Postcard preview" aria-modal="true">
@@ -442,9 +507,18 @@
         <button id="postcard-close" class="postcard-close" aria-label="Close">×</button>
         <canvas id="postcard-preview" class="postcard-canvas"></canvas>
         <div class="postcard-actions">
-          <button id="postcard-download" type="button" class="postcard-btn-action">⬇️ Download</button>
-          <button id="postcard-copy" type="button" class="postcard-btn-action">📋 Copy</button>
-          <button id="postcard-share" type="button" class="postcard-btn-action" style="display:none">📤 Share</button>
+          <button id="postcard-download" type="button" class="postcard-btn-action">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16" aria-hidden="true"><path d="M12 2v13m0 0l-4-4m4 4l4-4"/><path d="M2 20h20"/></svg>
+            Download
+          </button>
+          <button id="postcard-copy" type="button" class="postcard-btn-action">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+          <button id="postcard-share" type="button" class="postcard-btn-action" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share
+          </button>
         </div>
       </div>
     </div>
@@ -460,7 +534,9 @@
     <!-- Earthquake history timeline (shown when seismic layer is on) -->
     <div id="seismic-timeline" class="seismic-timeline" hidden>
       <div class="stl-header">
-        <button id="stl-play" class="stl-play" type="button" aria-label="Play timeline">▶</button>
+        <button id="stl-play" class="stl-play" type="button" aria-label="Play timeline">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12" aria-hidden="true"><polygon points="5,3 19,12 5,21"/></svg>
+        </button>
         <span id="stl-date" class="stl-date">Today (Live)</span>
       </div>
       <div class="stl-slider-wrap">
@@ -477,7 +553,10 @@
         <div id="cf-flag" class="cf-flag"></div>
         <h2 id="cf-name" style="margin-bottom:14px"></h2>
         <div id="cf-body" class="cf-body"></div>
-        <button id="cf-pin-btn" class="btn-ghost full" type="button" style="margin-top:16px">📍 Pin this country</button>
+        <button id="cf-pin-btn" class="btn-ghost full" type="button" style="margin-top:16px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16" aria-hidden="true"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          Pin this country
+        </button>
       </div>
     </div>
 
@@ -490,7 +569,10 @@
         <button id="screenshot-close" class="postcard-close" aria-label="Close">×</button>
         <img id="screenshot-preview" class="postcard-canvas" alt="Screenshot preview" style="border-radius:12px" />
         <div class="postcard-actions">
-          <button id="screenshot-download" type="button" class="postcard-btn-action">⬇️ Download</button>
+          <button id="screenshot-download" type="button" class="postcard-btn-action">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="16" height="16" aria-hidden="true"><path d="M12 2v13m0 0l-4-4m4 4l4-4"/><path d="M2 20h20"/></svg>
+            Download
+          </button>
         </div>
       </div>
     </div>
@@ -500,7 +582,10 @@
 
     <!-- Shared globe viewer banner (shown when ?share= URL param is present) -->
     <div id="viewer-banner" class="viewer-banner" hidden>
-      <span id="viewer-name">👁 Viewing a Globe</span>
+      <span id="viewer-name">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="14" height="14" aria-hidden="true"><ellipse cx="12" cy="12" rx="10" ry="6"/><circle cx="12" cy="12" r="3"/></svg>
+        Viewing a Globe
+      </span>
       <a href="/" class="viewer-cta">Create your own →</a>
     </div>
 

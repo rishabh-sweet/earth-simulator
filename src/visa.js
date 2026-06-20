@@ -45,11 +45,11 @@ function classify(raw) {
 }
 
 const BADGES = {
-  free:     { emoji: '✅', label: 'Visa free' },
-  arrival:  { emoji: '🕐', label: 'Visa on arrival' },
-  required: { emoji: '📋', label: 'Visa required' },
-  none:     { emoji: '🚫', label: 'No admission' },
-  self:     { emoji: '🏠', label: 'Home country' },
+  free:     { svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>`, label: 'Visa free' },
+  arrival:  { svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="14" height="14"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>`, label: 'Visa on arrival' },
+  required: { svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`, label: 'Visa required' },
+  none:     { svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="14" height="14"><circle cx="12" cy="12" r="9"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>`, label: 'No admission' },
+  self:     { svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="14" height="14"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`, label: 'Home country' },
 };
 
 export function createVisaChecker({ sound } = {}) {
@@ -110,7 +110,7 @@ export function createVisaChecker({ sound } = {}) {
     const cat = lookup(destName);
     if (!cat) return '';
     const b = BADGES[cat];
-    return `<span class="visa-badge ${cat}">${b.emoji} ${b.label}</span>`;
+    return `<span class="visa-badge ${cat}">${b.svg} ${b.label}</span>`;
   }
 
   // ── Passport selector inside the Profile panel ─────────────────────────────
