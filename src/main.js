@@ -24,6 +24,16 @@ import { SoundManager } from './sound.js';
 import { createCloudSync, emailSlug } from './cloudSync.js';
 import { supabase } from './supabase.js';
 import { createCitySearch } from './citySearch.js';
+import { createLiveFlights } from './liveFlights.js';
+import { createISSTracker } from './iss.js';
+import { createTimeZoneLayer } from './timeZones.js';
+import { createSeismicTimeline } from './seismicTimeline.js';
+import { createCountryFacts } from './countryFacts.js';
+import { createWeatherPins } from './weatherPins.js';
+import { createPopulationLayer } from './population.js';
+import { createTravelHeatmap } from './travelHeatmap.js';
+import { createAmbientMusic } from './ambientMusic.js';
+import { createScreenshotMode } from './screenshotMode.js';
 
 // ── Renderer (shared by both views) ──────────────────────────────────────────
 // logarithmicDepthBuffer lets one camera handle both the 1-unit Earth and the
@@ -198,6 +208,91 @@ swCountries.addEventListener('click', () => {
 
 // refresh quakes every 5 minutes while the seismic layer is on
 setInterval(() => { if (seismicOn) seismic.refresh(); }, 5 * 60 * 1000);
+
+// ── New feature layers ────────────────────────────────────────────────────────
+const liveFlights   = createLiveFlights(earthView.earth);
+const issTracker    = createISSTracker(earthView.earth);
+const timeZones     = createTimeZoneLayer(earthView.earth);
+const seismicTimeline = createSeismicTimeline(seismic, earthView.earth);
+const countryFacts  = createCountryFacts({ visa, pins, flyTo: flyToLatLng, sound });
+const weatherPins   = createWeatherPins(earthView.earth, { getPins: pins.getPins });
+const population    = createPopulationLayer(earthView.earth);
+const travelHeatmap = createTravelHeatmap(earthView.earth, { getPins: pins.getPins });
+const ambientMusic  = createAmbientMusic(sound);
+const screenshotMode = createScreenshotMode({
+  renderer,
+  getScene: () => earthView.scene,
+  getCamera: () => earthView.camera,
+});
+
+// Layer switches for new features
+const swFlights    = document.getElementById('sw-flights');
+const swTimezones  = document.getElementById('sw-timezones');
+const swWeatherPins = document.getElementById('sw-weatherpins');
+const swPopulation = document.getElementById('sw-population');
+const swHeatmap    = document.getElementById('sw-heatmap');
+const flightsLive  = document.getElementById('flights-live');
+const flightsCount = document.querySelector('.flights-count');
+
+let flightsOn = false, timezonesOn = false, weatherPinsOn = false, populationOn = false, heatmapOn = false;
+
+liveFlights.onCountChange((n) => {
+  if (flightsLive) flightsLive.style.display = n > 0 ? '' : 'none';
+  if (flightsCount) flightsCount.textContent = n > 0 ? `${n.toLocaleString()} flights` : '';
+});
+
+swFlights?.addEventListener('click', () => {
+  sound.click(); flightsOn = !flightsOn;
+  liveFlights.setVisible(flightsOn); setSwitch(swFlights, flightsOn);
+  if (flightsOn) liveFlights.refresh();
+});
+swTimezones?.addEventListener('click', () => {
+  sound.click(); timezonesOn = !timezonesOn;
+  timeZones.setVisible(timezonesOn); setSwitch(swTimezones, timezonesOn);
+});
+swWeatherPins?.addEventListener('click', () => {
+  sound.click(); weatherPinsOn = !weatherPinsOn;
+  weatherPins.setVisible(weatherPinsOn); setSwitch(swWeatherPins, weatherPinsOn);
+});
+swPopulation?.addEventListener('click', () => {
+  sound.click(); populationOn = !populationOn;
+  population.setVisible(populationOn); setSwitch(swPopulation, populationOn);
+});
+swHeatmap?.addEventListener('click', () => {
+  sound.click(); heatmapOn = !heatmapOn;
+  travelHeatmap.setVisible(heatmapOn, true); setSwitch(swHeatmap, heatmapOn);
+});
+
+// Auto-on heatmap event from travelHeatmap.js
+document.addEventListener('heatmap-auto-on', () => {
+  heatmapOn = true; setSwitch(swHeatmap, true);
+});
+
+// Rebuild heatmap and weather whenever pins change
+pinChangeHooks.push(() => {
+  travelHeatmap.rebuild();
+  if (weatherPinsOn) weatherPins.rebuild();
+});
+
+// Wire weather into pin card
+pins.setCardExtras((pin) => weatherPinsOn ? weatherPins.cardHtml(pin.id) : '');
+
+// Refresh flights every 60 s while on
+setInterval(() => { if (flightsOn) liveFlights.refresh(); }, 60 * 1000);
+
+// Seismic timeline shows/hides with the seismic layer (fires after main toggle)
+swSeismic.addEventListener('click', () => {
+  // At this point seismicOn has already been toggled by the earlier listener
+  if (seismicOn) seismicTimeline.show(); else seismicTimeline.hide();
+});
+
+// Screenshot button
+document.getElementById('btn-screenshot')?.addEventListener('click', () => {
+  sound.click();
+  if (screenshotMode.isClean()) { screenshotMode.toggleClean(); return; }
+  // Long-press = clean mode, single tap = capture
+  screenshotMode.capture();
+});
 
 // ── Cinematic mode ───────────────────────────────────────────────────────────
 const cinematic = createCinematic({
@@ -723,12 +818,73 @@ window.addEventListener('pointerup', (e) => {
     const hit = pickEarthSurface(e.clientX, e.clientY);
     if (hit) pins.openAdd(hit.point);
   } else {
+    // Live flights click
+    if (flightsOn) {
+      ndc.x = (e.clientX / window.innerWidth) * 2 - 1;
+      ndc.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(ndc, earthView.camera);
+      const fhits = raycaster.intersectObjects(liveFlights.getClickables(), false);
+      if (fhits.length) {
+        const fd = liveFlights.getFlightData(fhits[0].instanceId);
+        if (fd) {
+          featureBadge.textContent = fd.callsign || 'Flight';
+          featureBadge.className = 'feature-badge volcano';
+          featureTitle.textContent = `✈️ ${fd.callsign || fd.icao24}`;
+          featureBody.innerHTML =
+            fbRow('Country', fd.country || '—') +
+            fbRow('Altitude', fd.altM != null ? `${Math.round(fd.altM).toLocaleString()} m` : '—') +
+            fbRow('Speed', fd.speedKmh != null ? `${Math.round(fd.speedKmh)} km/h` : '—') +
+            fbRow('Heading', fd.heading != null ? `${Math.round(fd.heading)}°` : '—');
+          featureCard.classList.add('show');
+          featureCard.setAttribute('aria-hidden', 'false');
+          sound.chime();
+          return;
+        }
+      }
+    }
+    // ISS click
+    {
+      ndc.x = (e.clientX / window.innerWidth) * 2 - 1;
+      ndc.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(ndc, earthView.camera);
+      const issClickable = issTracker.getClickable();
+      if (issClickable) {
+        const ihits = raycaster.intersectObject(issClickable, false);
+        if (ihits.length) {
+          const info = issTracker.getInfo();
+          featureBadge.textContent = 'ISS';
+          featureBadge.className = 'feature-badge volcano';
+          featureTitle.textContent = '🛸 International Space Station';
+          featureBody.innerHTML =
+            fbRow('Altitude', '408 km') +
+            fbRow('Speed', '27,600 km/h') +
+            fbRow('Latitude', info ? `${info.lat.toFixed(2)}°` : '—') +
+            fbRow('Longitude', info ? `${info.lng.toFixed(2)}°` : '—') +
+            fbRow('Visibility', info?.visibility || '—') +
+            '<div class="fb-row" style="font-size:12px;color:rgba(233,238,252,0.5);margin-top:6px">The ISS orbits Earth every 90 minutes at ~17,500 mph, completing 16 sunrises per day.</div>';
+          featureCard.classList.add('show');
+          featureCard.setAttribute('aria-hidden', 'false');
+          sound.chime();
+          return;
+        }
+      }
+    }
     if (seismicOn) {
       const f = pickSeismic(e.clientX, e.clientY);
       if (f) { showFeature(f); return; }
     }
     const id = pins.pickPin(e.clientX, e.clientY);
-    if (id) pins.openCard(id);
+    if (id) { pins.openCard(id); return; }
+    // Country facts click (no pin or seismic hit)
+    {
+      const hit = pickEarthSurface(e.clientX, e.clientY);
+      if (hit) {
+        const local = earthView.earth.worldToLocal(hit.point.clone());
+        const ll = latLngFromLocal(local);
+        const info = countries.hoverAt(ll.lat, ll.lng);
+        if (info && info.name) countryFacts.show(info.name);
+      }
+    }
   }
 });
 
@@ -834,6 +990,18 @@ function animate(now) {
     terminator.update(sun, earthView.camera, dt);
     seismic.update(dt);
     countries.update(dt);
+    issTracker.update(dt);
+    // Ambient music: feed camera's Earth surface hit lat/lng
+    if (!cinematic.isActive()) {
+      const camHit = pickEarthSurface(window.innerWidth / 2, window.innerHeight / 2);
+      if (camHit) {
+        const local = earthView.earth.worldToLocal(camHit.point.clone());
+        const ll = latLngFromLocal(local);
+        ambientMusic.update(ll.lat, ll.lng);
+      } else {
+        ambientMusic.update(null, null);
+      }
+    }
     if (cinematic.isActive()) cinematic.update(dt);
     else if (!busy()) earthView.controls.update();
     renderer.render(earthView.scene, earthView.camera);

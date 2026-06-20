@@ -1329,10 +1329,87 @@ body.cinematic-on #layers-panel {
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+/* ── World clock widget ────────────────────────────────────────────────────── */
+.world-clock {
+  position: fixed; bottom: 70px; right: 14px; z-index: 120;
+  background: rgba(8,4,20,0.82); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 12px;
+  padding: 10px 14px; min-width: 170px;
+}
+.world-clock[hidden] { display: none; }
+.wc-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 5px; }
+.wc-row:last-child { margin-bottom: 0; }
+.wc-label { font-size: 11px; color: rgba(233,238,252,0.5); letter-spacing: 0.05em; }
+.wc-time  { font-size: 12px; font-family: 'Courier New', Courier, monospace; color: #b4c8ff; }
+
+/* ── Seismic timeline slider ───────────────────────────────────────────────── */
+.seismic-timeline {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+  background: rgba(8,4,20,0.88); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 14px;
+  padding: 10px 18px 12px; min-width: 300px; max-width: 500px; width: 75vw;
+  z-index: 120; display: flex; flex-direction: column; gap: 8px;
+}
+.seismic-timeline[hidden] { display: none; }
+.stl-header { display: flex; align-items: center; gap: 10px; }
+.stl-play {
+  width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08); color: #e9eefc; font-size: 11px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+.stl-play:hover { background: rgba(255,255,255,0.16); }
+.stl-date { font-size: 13px; color: rgba(233,238,252,0.8); letter-spacing: 0.03em; }
+.stl-slider-wrap { display: flex; align-items: center; gap: 8px; }
+.stl-cap { font-size: 10px; color: rgba(233,238,252,0.4); white-space: nowrap; flex-shrink: 0; }
+.stl-slider {
+  flex: 1; -webkit-appearance: none; appearance: none; height: 4px;
+  background: rgba(255,255,255,0.18); border-radius: 2px; outline: none; cursor: pointer;
+}
+.stl-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px;
+  border-radius: 50%; background: #ff6a3d; cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.5);
+}
+
+/* ── Country facts panel ──────────────────────────────────────────────────── */
+.cf-flag { font-size: 52px; text-align: center; margin-bottom: 6px; line-height: 1; }
+.cf-body { display: flex; flex-direction: column; gap: 4px; }
+.cf-row  { display: flex; justify-content: space-between; gap: 12px;
+           font-size: 13px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.cf-row:last-of-type { border-bottom: none; }
+.cf-lbl  { color: rgba(233,238,252,0.5); flex-shrink: 0; }
+.cf-val  { color: #e9eefc; text-align: right; }
+.cf-fact { font-size: 12px; color: rgba(233,238,252,0.55); font-style: italic;
+           margin-top: 10px; line-height: 1.5; }
+
+/* ── Flights live badge & count ───────────────────────────────────────────── */
+.flights-count { font-size: 11px; color: rgba(233,238,252,0.5); margin-left: 4px; }
+
+/* ── Weather pin display in pin card ─────────────────────────────────────── */
+.pin-weather {
+  font-size: 13px; color: rgba(180,200,255,0.8);
+  margin: 4px 0 10px; line-height: 1.4;
+}
+
+/* ── Screenshot / clean mode ─────────────────────────────────────────────── */
+.clean-exit-btn {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+  padding: 8px 20px; border-radius: 999px; z-index: 600;
+  background: rgba(8,4,20,0.88); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2); color: rgba(233,238,252,0.8);
+  font-size: 13px; cursor: pointer; font-family: inherit;
+  transition: background 0.15s ease;
+}
+.clean-exit-btn:hover { background: rgba(255,255,255,0.1); }
+.clean-exit-btn[hidden] { display: none; }
+
 @media (max-width: 640px) {
   .challenges-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
   .surprise-card { bottom: 70px; }
   .stats-feature-row { flex-direction: column; }
   .stats-feature-row .btn-ghost { width: 100%; }
   .postcard-modal-inner { padding: 12px; gap: 12px; }
+  .seismic-timeline { width: 90vw; min-width: unset; }
+  .world-clock { right: 8px; bottom: 60px; }
 }

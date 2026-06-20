@@ -141,6 +141,7 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
   let pinMode = false;
   let editingId = null;
   let cardId = null;
+  let cardExtrasProvider = null; // (pin) => htmlString
   let pendingLatLng = null;
   let currentType = 'visited';
   let currentPhoto = null;
@@ -462,6 +463,8 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     cardPhoto.style.display = pin.photoBase64 ? 'block' : 'none';
     cardNote.textContent = pin.note || '';
     cardNote.style.display = pin.note ? 'block' : 'none';
+    const extrasEl = document.getElementById('pin-card-extras');
+    if (extrasEl) extrasEl.innerHTML = cardExtrasProvider ? (cardExtrasProvider(pin) || '') : '';
     cardCoords.textContent = fmtCoords(pin.lat, pin.lng);
     const trip = trips.find((t) => t.id === pin.tripId);
     cardDate.textContent = (pin.dateAdded ? `Added ${fmtDate(pin.dateAdded)}` : '') + (trip ? `  ·  ${trip.emoji} ${trip.name}` : '');
@@ -669,6 +672,7 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     showChrome, hideChrome, closePanels,
     pickPin, openAdd, openCard, openEdit, addWishlistPin,
     openAddAtLatLng, replaceStore, loadSharedPins,
+    setCardExtras: (fn) => { cardExtrasProvider = fn; },
     toggleFlights, openTrips, setOnChange: (fn) => { changeListener = fn; },
     getPins: () => store,
     getTrips: () => trips,

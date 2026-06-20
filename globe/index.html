@@ -136,6 +136,7 @@
       <button id="btn-planner" class="ui-icon ui-emoji" aria-label="Plan a trip" title="Plan Trip">🗺️</button>
       <button id="btn-surprise" class="ui-icon ui-emoji" aria-label="Surprise me" title="Surprise Me">🎲</button>
       <button id="btn-challenges" class="ui-icon ui-emoji" aria-label="Challenges" title="Challenges">🏆</button>
+      <button id="btn-screenshot" class="ui-icon ui-emoji" aria-label="Screenshot" title="Screenshot / Clean Mode">📸</button>
       <button id="btn-pin" class="ui-icon pin-toggle" aria-label="Toggle pin mode" aria-pressed="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z" />
@@ -165,6 +166,26 @@
       <div class="layers-row">
         <span class="lr-label">🌅 Terminator</span>
         <button class="layer-switch on" id="sw-terminator" role="switch" aria-checked="true"><span></span></button>
+      </div>
+      <div class="layers-row">
+        <span class="lr-label">✈️ Live Flights <span class="live-badge" id="flights-live" style="display:none">Live</span></span>
+        <button class="layer-switch" id="sw-flights" role="switch" aria-checked="false"><span></span></button>
+      </div>
+      <div class="layers-row">
+        <span class="lr-label">⏱️ Time Zones</span>
+        <button class="layer-switch" id="sw-timezones" role="switch" aria-checked="false"><span></span></button>
+      </div>
+      <div class="layers-row">
+        <span class="lr-label">🌦️ Weather Pins</span>
+        <button class="layer-switch" id="sw-weatherpins" role="switch" aria-checked="false"><span></span></button>
+      </div>
+      <div class="layers-row">
+        <span class="lr-label">👥 Population</span>
+        <button class="layer-switch" id="sw-population" role="switch" aria-checked="false"><span></span></button>
+      </div>
+      <div class="layers-row">
+        <span class="lr-label">🔥 My Heatmap</span>
+        <button class="layer-switch" id="sw-heatmap" role="switch" aria-checked="false"><span></span></button>
       </div>
     </div>
 
@@ -239,6 +260,7 @@
         <h2 id="pin-card-name"></h2>
         <div id="pin-card-photo" class="card-photo"></div>
         <div id="pin-card-note" class="card-note"></div>
+        <div id="pin-card-extras"></div>
         <div id="pin-card-coords" class="pin-coords"></div>
         <div id="pin-card-date" class="pin-date"></div>
         <div class="pin-actions">
@@ -461,6 +483,55 @@
         </div>
       </div>
     </div>
+
+    <!-- World clock widget (shown when time-zones layer is on) -->
+    <div id="world-clock" class="world-clock" hidden>
+      <div class="wc-row"><span class="wc-label">Local</span><span id="wc-local" class="wc-time">--:--:--</span></div>
+      <div class="wc-row"><span class="wc-label">UTC</span><span id="wc-utc" class="wc-time">--:--:--</span></div>
+      <div class="wc-row"><span class="wc-label">Tokyo</span><span id="wc-tokyo" class="wc-time">--:--:--</span></div>
+      <div class="wc-row"><span class="wc-label">New York</span><span id="wc-newyork" class="wc-time">--:--:--</span></div>
+    </div>
+
+    <!-- Earthquake history timeline (shown when seismic layer is on) -->
+    <div id="seismic-timeline" class="seismic-timeline" hidden>
+      <div class="stl-header">
+        <button id="stl-play" class="stl-play" type="button" aria-label="Play timeline">▶</button>
+        <span id="stl-date" class="stl-date">Today (Live)</span>
+      </div>
+      <div class="stl-slider-wrap">
+        <span class="stl-cap">30 days ago</span>
+        <input id="stl-slider" class="stl-slider" type="range" min="0" max="30" value="30" />
+        <span class="stl-cap">Today</span>
+      </div>
+    </div>
+
+    <!-- Country facts panel -->
+    <div id="country-facts-card" class="pin-sheet" aria-hidden="true">
+      <div class="pin-sheet-inner">
+        <button id="country-facts-close" class="sheet-x" aria-label="Close">×</button>
+        <div id="cf-flag" class="cf-flag"></div>
+        <h2 id="cf-name" style="margin-bottom:14px"></h2>
+        <div id="cf-body" class="cf-body"></div>
+        <button id="cf-pin-btn" class="btn-ghost full" type="button" style="margin-top:16px">📍 Pin this country</button>
+      </div>
+    </div>
+
+    <!-- ISS / flight info card (reuses feature-card for flight clicks) -->
+    <!-- Reuses existing #feature-card — no new HTML needed -->
+
+    <!-- Screenshot modal -->
+    <div id="screenshot-modal" class="postcard-modal" role="dialog" aria-label="Screenshot preview" aria-modal="true">
+      <div class="postcard-modal-inner">
+        <button id="screenshot-close" class="postcard-close" aria-label="Close">×</button>
+        <img id="screenshot-preview" class="postcard-canvas" alt="Screenshot preview" style="border-radius:12px" />
+        <div class="postcard-actions">
+          <button id="screenshot-download" type="button" class="postcard-btn-action">⬇️ Download</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clean mode exit pill -->
+    <button id="clean-exit" class="clean-exit-btn" hidden>Exit Clean Mode · ESC</button>
 
     <!-- Shared globe viewer banner (shown when ?share= URL param is present) -->
     <div id="viewer-banner" class="viewer-banner" hidden>
