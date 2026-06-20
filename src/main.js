@@ -210,20 +210,65 @@ swCountries.addEventListener('click', () => {
 setInterval(() => { if (seismicOn) seismic.refresh(); }, 5 * 60 * 1000);
 
 // ── New feature layers ────────────────────────────────────────────────────────
-const liveFlights   = createLiveFlights(earthView.earth);
-const issTracker    = createISSTracker(earthView.earth);
-const timeZones     = createTimeZoneLayer(earthView.earth);
-const seismicTimeline = createSeismicTimeline(seismic, earthView.earth);
-const countryFacts  = createCountryFacts({ visa, pins, flyTo: flyToLatLng, sound });
-const weatherPins   = createWeatherPins(earthView.earth, { getPins: pins.getPins });
-const population    = createPopulationLayer(earthView.earth);
-const travelHeatmap = createTravelHeatmap(earthView.earth, { getPins: pins.getPins });
-const ambientMusic  = createAmbientMusic(sound);
-const screenshotMode = createScreenshotMode({
-  renderer,
-  getScene: () => earthView.scene,
-  getCamera: () => earthView.camera,
-});
+// visa must be available for countryFacts — create it here (mountSelector called later)
+const visa = createVisaChecker({ sound });
+
+// Hard safety timeout registered BEFORE any module init so it fires even if one crashes.
+// revealGlobe is a hoisted function; loaderEl/loaderFill/ready are all initialised
+// synchronously before 10 s elapses.
+setTimeout(revealGlobe, 10000); // eslint-disable-line no-use-before-define
+
+const _noop = () => {};
+
+const liveFlights = (() => {
+  try { return createLiveFlights(earthView.earth); }
+  catch (e) { console.error('[WG] liveFlights failed:', e); return { setVisible: _noop, refresh: _noop, onCountChange: _noop, getClickables: () => [], getFlightData: () => null }; }
+})();
+
+const issTracker = (() => {
+  try { return createISSTracker(earthView.earth); }
+  catch (e) { console.error('[WG] issTracker failed:', e); return { update: _noop, getClickable: () => null, getInfo: () => null }; }
+})();
+
+const timeZones = (() => {
+  try { return createTimeZoneLayer(earthView.earth); }
+  catch (e) { console.error('[WG] timeZones failed:', e); return { setVisible: _noop }; }
+})();
+
+const seismicTimeline = (() => {
+  try { return createSeismicTimeline(seismic, earthView.earth); }
+  catch (e) { console.error('[WG] seismicTimeline failed:', e); return { show: _noop, hide: _noop }; }
+})();
+
+const countryFacts = (() => {
+  try { return createCountryFacts({ visa, pins, flyTo: flyToLatLng, sound }); }
+  catch (e) { console.error('[WG] countryFacts failed:', e); return { show: _noop }; }
+})();
+
+const weatherPins = (() => {
+  try { return createWeatherPins(earthView.earth, { getPins: pins.getPins }); }
+  catch (e) { console.error('[WG] weatherPins failed:', e); return { setVisible: _noop, rebuild: _noop, cardHtml: () => '' }; }
+})();
+
+const population = (() => {
+  try { return createPopulationLayer(earthView.earth); }
+  catch (e) { console.error('[WG] population failed:', e); return { setVisible: _noop }; }
+})();
+
+const travelHeatmap = (() => {
+  try { return createTravelHeatmap(earthView.earth, { getPins: pins.getPins }); }
+  catch (e) { console.error('[WG] travelHeatmap failed:', e); return { setVisible: _noop, rebuild: _noop }; }
+})();
+
+const ambientMusic = (() => {
+  try { return createAmbientMusic(sound); }
+  catch (e) { console.error('[WG] ambientMusic failed:', e); return { update: _noop, stop: _noop, dispose: _noop }; }
+})();
+
+const screenshotMode = (() => {
+  try { return createScreenshotMode({ renderer, getScene: () => earthView.scene, getCamera: () => earthView.camera }); }
+  catch (e) { console.error('[WG] screenshotMode failed:', e); return { capture: _noop, toggleClean: _noop, isClean: () => false }; }
+})();
 
 // Layer switches for new features
 const swFlights    = document.getElementById('sw-flights');
@@ -341,7 +386,6 @@ function flyToLatLng(lat, lng) {
   });
 }
 
-const visa = createVisaChecker({ sound });
 visa.mountSelector();
 
 const challenges = createChallenges({ getPins: pins.getPins, getTrips: pins.getTrips, sound });
@@ -430,12 +474,11 @@ earthView.controls.enabled = false; // no interaction until loaded
 loadingManager.onProgress = (url, loaded, total) => {
   loaderFill.style.transform = `scaleX(${total ? loaded / total : 1})`;
 };
+loadingManager.onError = () => {};
 loadingManager.onLoad = () => {
-  // keep the loader up for a brief floor so it never just flashes
   const elapsed = performance.now() - loadStart;
   setTimeout(revealGlobe, Math.max(0, 750 - elapsed));
 };
-setTimeout(revealGlobe, 6000); // safety net if loading ever stalls
 
 function revealGlobe() {
   if (ready) return;

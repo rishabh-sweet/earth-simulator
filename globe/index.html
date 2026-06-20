@@ -542,7 +542,13 @@
     <script type="module" src="/src/main.js"></script>
     <script>
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
+        navigator.serviceWorker.getRegistrations().then((regs) =>
+          Promise.all(regs.map((r) => r.unregister()))
+        ).then(() => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }).catch(() => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
       }
       function updateOnlineBanner() {
         const b = document.getElementById('offline-banner');
