@@ -2,6 +2,7 @@
 
 import { initMiniGlobe } from './miniGlobe.js';
 import { supabase } from '../src/supabase.js';
+import { animate, stagger } from "animejs";
 
 // ── Handle OAuth callback or existing session ─────────────────────────────────
 (async () => {
@@ -30,6 +31,17 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 
 // ── Mini 3D globe in the hero ─────────────────────────────────────────────────
 initMiniGlobe(document.getElementById('mini-globe-canvas'));
+
+const heroStage = document.querySelector(".stage-globe, #hero-stage, .hero-globe");
+if (heroStage && !reducedMotion) {
+  document.addEventListener("mousemove", (e) => {
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    const dx = (e.clientX - cx) / cx;
+    const dy = (e.clientY - cy) / cy;
+    heroStage.style.transform = "translate(" + (-dx * 10) + "px, " + (-dy * 10) + "px)";
+  });
+}
 
 // ── Starfield ────────────────────────────────────────────────────────────────
 const canvas = document.getElementById('stars');
@@ -109,6 +121,15 @@ const revealObserver = new IntersectionObserver(
       const el = entry.target;
       const delay = Number(el.dataset.delay || 0);
       setTimeout(() => el.classList.add('visible'), delay);
+      if (!reducedMotion && (el.classList.contains("bento-card") || el.classList.contains("step-card"))) {
+        animate(el, {
+          opacity: [0, 1],
+          translateY: [30, 0],
+          ease: "outExpo",
+          duration: 600,
+          delay: Number(el.dataset.delay || 0),
+        });
+      }
       revealObserver.unobserve(el);
     }
   },
@@ -124,17 +145,14 @@ document.querySelectorAll('#hero .reveal').forEach((el, i) => {
 
 // Hero title words: extra per-word stagger
 if (!reducedMotion) {
-  document.querySelectorAll('.hero-title .line').forEach((line, lineIdx) => {
-    line.querySelectorAll('.word').forEach((word, wordIdx) => {
-      word.style.opacity = '0';
-      word.style.transform = 'translateY(20px)';
-      const ms = lineIdx * 120 + wordIdx * 70;
-      word.style.transition = `opacity 0.7s cubic-bezier(0.16,1,0.3,1) ${ms}ms, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${ms}ms`;
-      setTimeout(() => {
-        word.style.opacity = '1';
-        word.style.transform = 'translateY(0)';
-      }, 150 + ms);
-    });
+  const words = document.querySelectorAll(".hero-title .word");
+  words.forEach((w) => { w.style.opacity = "0"; w.style.transform = "translateY(20px)"; });
+  animate(words, {
+    opacity: [0, 1],
+    translateY: [20, 0],
+    ease: "outExpo",
+    duration: 700,
+    delay: stagger(80, { start: 200 }),
   });
 }
 
@@ -168,7 +186,22 @@ const counterObserver = new IntersectionObserver(
   (entries) => {
     for (const entry of entries) {
       if (!entry.isIntersecting) continue;
-      runCounter(entry.target);
+      if (!reducedMotion) {
+        const target = parseFloat(entry.target.dataset.count || "0");
+        const decimals = Number(entry.target.dataset.decimals || 0);
+        const suffix = entry.target.dataset.suffix || "";
+        const obj = { val: 0 };
+        animate(obj, {
+          val: target,
+          duration: 2000,
+          ease: "outExpo",
+          onUpdate: () => {
+            entry.target.textContent = obj.val.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + suffix;
+          },
+        });
+      } else {
+        runCounter(entry.target);
+      }
       counterObserver.unobserve(entry.target);
     }
   },
@@ -332,6 +365,17 @@ const savedUser = getUser();
 if (savedUser && savedUser.name) {
   document.querySelectorAll('.js-open-login .cta-label').forEach((label) => {
     label.textContent = `Welcome back, ${savedUser.name}`;
+  });
+}
+
+// ── CTA float loop ────────────────────────────────────────────────────────────
+if (!reducedMotion) {
+  animate(".btn-glow", {
+    translateY: [-3, 0],
+    duration: 2500,
+    ease: "inOutSine",
+    alternate: true,
+    loop: true,
   });
 }
 

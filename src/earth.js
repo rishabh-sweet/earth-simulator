@@ -73,18 +73,30 @@ const fragmentShader = /* glsl */ `
 // `maxAnisotropy` (from the renderer) keeps the textures sharp at grazing
 // angles near the horizon instead of looking blocky or seamed.
 export function createEarth(maxAnisotropy = 1, manager) {
-  const geometry = new THREE.SphereGeometry(1, 64, 64);
+  const geometry = new THREE.SphereGeometry(1, 128, 128);
   const loader = new THREE.TextureLoader(manager);
 
   // Daytime "Blue Marble" photo. It's a color image, so decode it from sRGB.
-  const dayTexture = loader.load('/textures/earth_daymap.jpg');
+  // NASA 8K — falls back to local if unreachable
+  const dayTexture = loader.load(
+    'https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73776/world.topo.bathy.200412.3x5400x2700.jpg',
+    undefined,
+    undefined,
+    () => { loader.load('/textures/earth_daymap.jpg', (t) => { dayTexture.image = t.image; dayTexture.needsUpdate = true; }); }
+  );
   dayTexture.colorSpace = THREE.SRGBColorSpace;
   dayTexture.anisotropy = maxAnisotropy;
+  dayTexture.minFilter = THREE.LinearMipmapLinearFilter;
+  dayTexture.magFilter = THREE.LinearFilter;
+  dayTexture.generateMipmaps = true;
 
   // Night-time "Black Marble" city lights, same projection so it lines up.
   const nightTexture = loader.load('/textures/earth_nightmap.jpg');
   nightTexture.colorSpace = THREE.SRGBColorSpace;
   nightTexture.anisotropy = maxAnisotropy;
+  nightTexture.minFilter = THREE.LinearMipmapLinearFilter;
+  nightTexture.magFilter = THREE.LinearFilter;
+  nightTexture.generateMipmaps = true;
 
   const material = new THREE.ShaderMaterial({
     uniforms: {

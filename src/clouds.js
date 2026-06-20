@@ -59,6 +59,9 @@ export function createCloudLayers(maxAnisotropy = 1, manager) {
   const tex = loader.load('/textures/earthcloudmap.jpg');
   tex.colorSpace = THREE.LinearSRGBColorSpace; // a data mask, not a colour photo
   tex.anisotropy = maxAnisotropy;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = true;
 
   const mk = (fragmentShader) =>
     new THREE.ShaderMaterial({
@@ -75,9 +78,9 @@ export function createCloudLayers(maxAnisotropy = 1, manager) {
 
   // shadow just above the surface, clouds just above the shadow — both barely
   // off the surface so the layer reads as hugging the planet
-  const shadow = new THREE.Mesh(new THREE.SphereGeometry(1.003, 64, 64), mk(shadowFragment));
+  const shadow = new THREE.Mesh(new THREE.SphereGeometry(1.010, 64, 64), mk(shadowFragment));
   shadow.renderOrder = 1;
-  const clouds = new THREE.Mesh(new THREE.SphereGeometry(1.006, 64, 64), mk(cloudFragment));
+  const clouds = new THREE.Mesh(new THREE.SphereGeometry(1.013, 64, 64), mk(cloudFragment));
   clouds.renderOrder = 2;
 
   return { clouds, shadow };

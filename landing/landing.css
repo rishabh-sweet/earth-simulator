@@ -1,3 +1,20 @@
+:root {
+  --bg: #050010;
+  --surface: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.08);
+  --gold: #E8B86D;
+  --blue: #4A90E2;
+  --coral: #FF6B6B;
+  --text: #FFFFFF;
+  --text-secondary: rgba(255,255,255,0.5);
+  --glass-bg: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+  --glass-blur: blur(40px) saturate(180%);
+  --glass-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  --radius: 20px;
+  --trans: 250ms ease;
+}
+
 /* ════════════════════════════════════════════════════════════════════════
    Wanderglobe — premium landing page
    Design system: deep-gradient sunset, glassmorphism, Clash Display + Satoshi
@@ -36,7 +53,7 @@ html { scroll-behavior: smooth; }
 body {
   font-family: var(--font-body);
   color: var(--text);
-  background: var(--midnight);
+  background: var(--bg);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
@@ -134,6 +151,33 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 600; line-height: 1
 }
 .btn-primary:hover::after { transform: translateX(120%); transition: transform 0.85s ease; }
 
+.btn-glow {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, rgba(74,144,226,0.15), rgba(232,184,109,0.15));
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+.btn-glow-wrap {
+  position: relative;
+  display: inline-block;
+  border-radius: 999px;
+  padding: 2px;
+  background: linear-gradient(135deg, #4A90E2, #E8B86D, #FF6B6B);
+  background-size: 200% 200%;
+  animation: grad-border 3s linear infinite;
+}
+@keyframes grad-border {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.btn-glow-inner {
+  background: linear-gradient(135deg, #0a1535, #1a0535);
+  border-radius: inherit;
+  padding: inherit;
+}
+
 .btn-glass {
   background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -182,9 +226,19 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 600; line-height: 1
   color: var(--text-dim);
   font-size: 15px;
   font-weight: 500;
-  transition: color 0.2s ease;
+  position: relative;
+  transition: color var(--trans);
 }
 .nav-center a:hover { color: var(--text); }
+.nav-center a::after {
+  content: "";
+  position: absolute;
+  bottom: -2px; left: 0;
+  width: 0; height: 1px;
+  background: linear-gradient(90deg, var(--blue), var(--coral));
+  transition: width var(--trans);
+}
+.nav-center a:hover::after { width: 100%; }
 .nav-actions { display: flex; align-items: center; gap: 14px; }
 .nav-link {
   color: var(--text); font-weight: 600; font-size: 15px;
@@ -294,9 +348,12 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 600; line-height: 1
 .hero-right {
   position: relative;
   aspect-ratio: 1 / 1;
+  width: 40vmin;
+  height: 40vmin;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 #mini-globe-canvas {
   width: 100%;
@@ -377,13 +434,18 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 600; line-height: 1
 .feature-card {
   position: relative;
   padding: 40px 30px 34px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
+  box-shadow:
+    0 2px 0 rgba(255,255,255,0.08) inset,
+    0 -1px 0 rgba(0,0,0,0.2) inset,
+    0 8px 32px rgba(0,0,0,0.4),
+    0 2px 8px rgba(74,144,226,0.1);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
-  border-radius: var(--radius);
   overflow: hidden;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  transition: transform var(--trans), box-shadow var(--trans);
 }
 .feature-card::before {
   content: '';
@@ -395,8 +457,12 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 600; line-height: 1
 .border-coral::before { background: linear-gradient(90deg, var(--pink), var(--coral)); }
 .border-gold::before { background: linear-gradient(90deg, var(--gold), var(--orange)); }
 .feature-card:hover {
-  transform: translateY(-8px);
-  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-4px);
+  box-shadow:
+    0 2px 0 rgba(255,255,255,0.1) inset,
+    0 -1px 0 rgba(0,0,0,0.2) inset,
+    0 20px 50px rgba(0,0,0,0.5),
+    0 4px 16px rgba(74,144,226,0.15);
 }
 .border-blue:hover { box-shadow: 0 24px 60px -20px rgba(79, 195, 247, 0.5); }
 .border-coral:hover { box-shadow: 0 24px 60px -20px rgba(255, 107, 138, 0.5); }
@@ -592,6 +658,16 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 600; line-height: 1
   background: linear-gradient(180deg, rgba(45, 27, 105, 0.5), rgba(20, 12, 48, 0.85));
   border-top: 2px solid transparent;
   border-image: linear-gradient(90deg, var(--blue), var(--pink), var(--gold)) 1;
+  position: relative;
+}
+footer::before, .site-footer::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 120px;
+  background: linear-gradient(to bottom, transparent, rgba(5,0,16,0.6));
+  pointer-events: none;
+  z-index: 0;
 }
 .footer-inner {
   max-width: var(--maxw);
@@ -789,4 +865,44 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 600; line-height: 1
   .icon-drop .ic-pin, .icon-photo .ic-shot, .icon-share .ic-node,
   .btn-primary::after { animation: none !important; }
   .reveal { transition: none; }
+}
+
+/* orb backgrounds */
+.orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.18;
+}
+.orb-1 {
+  width: 60vmax; height: 60vmax;
+  background: radial-gradient(circle, #4A90E2, transparent 70%);
+  top: -20vmax; left: -10vmax;
+  animation: orb-drift-1 18s ease-in-out infinite alternate;
+}
+.orb-2 {
+  width: 50vmax; height: 50vmax;
+  background: radial-gradient(circle, #FF6B6B, transparent 70%);
+  bottom: -10vmax; right: -10vmax;
+  animation: orb-drift-2 22s ease-in-out infinite alternate;
+}
+.orb-3 {
+  width: 40vmax; height: 40vmax;
+  background: radial-gradient(circle, #E8B86D, transparent 70%);
+  top: 40%; left: 40%;
+  animation: orb-drift-3 15s ease-in-out infinite alternate;
+}
+@keyframes orb-drift-1 {
+  0% { transform: translate(0,0) scale(1); }
+  100% { transform: translate(5vw,8vh) scale(1.1); }
+}
+@keyframes orb-drift-2 {
+  0% { transform: translate(0,0) scale(1); }
+  100% { transform: translate(-6vw,-5vh) scale(0.9); }
+}
+@keyframes orb-drift-3 {
+  0% { transform: translate(0,0) scale(1); }
+  100% { transform: translate(4vw,-6vh) scale(1.05); }
 }

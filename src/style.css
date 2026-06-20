@@ -1,3 +1,20 @@
+:root {
+  --bg: #050010;
+  --surface: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.08);
+  --gold: #E8B86D;
+  --blue: #4A90E2;
+  --coral: #FF6B6B;
+  --text: #FFFFFF;
+  --text-secondary: rgba(255,255,255,0.5);
+  --glass-bg: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+  --glass-blur: blur(40px) saturate(180%);
+  --glass-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  --radius: 20px;
+  --trans: 250ms ease;
+}
+
 /* Remove default spacing and make the canvas fill the window */
 * {
   margin: 0;
@@ -11,7 +28,7 @@ body {
 }
 
 body {
-  background: #000;
+  background: var(--bg);
   overflow: hidden;
   font-family: 'Rajdhani', 'Helvetica Neue', Arial, sans-serif;
 }
@@ -303,19 +320,14 @@ body {
 /* ── Earth-view tool cluster (top-right) ─────────────────────────────────── */
 #earth-tools {
   position: fixed;
-  top: 18px;
-  right: 18px;
+  inset: 0;
   z-index: 26;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  opacity: 0;
+  transition: opacity var(--trans);
 }
 #earth-tools.visible {
   opacity: 1;
-  pointer-events: auto;
 }
 /* the cluster does the positioning; its buttons sit in normal flow */
 #earth-tools .ui-icon,
@@ -831,7 +843,7 @@ body {
 /* ════════════════════════════════════════════════════════════════════════
    Layers panel, seismic card, country tooltip, cinematic (visual layers pass)
    ════════════════════════════════════════════════════════════════════════ */
-#earth-tools { flex-wrap: wrap; justify-content: flex-end; max-width: min(420px, calc(100vw - 80px)); }
+/* #earth-tools flex-wrap removed — pills now handle their own layout */
 #btn-layers.active,
 #btn-cinematic.active {
   background: linear-gradient(135deg, #ffd479, #f0a93a);
@@ -1412,4 +1424,256 @@ body.cinematic-on #layers-panel {
   .postcard-modal-inner { padding: 12px; gap: 12px; }
   .seismic-timeline { width: 90vw; min-width: unset; }
   .world-clock { right: 8px; bottom: 60px; }
+}
+
+/* ── Toolbar pills ── */
+.toolbar-pill {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--glass-shadow);
+  pointer-events: auto;
+}
+#toolbar-left { left: 16px; top: 16px; }
+#toolbar-right { right: 16px; top: 16px; }
+#toolbar-bottom {
+  bottom: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: row;
+  border-radius: 999px;
+  padding: 6px 10px;
+}
+.t-btn {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.85);
+  cursor: pointer;
+  transition: background var(--trans), color var(--trans);
+  text-decoration: none;
+  flex: none;
+  position: relative;
+}
+.t-btn svg { pointer-events: none; }
+.t-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.t-btn.active { background: rgba(74,144,226,0.2); color: var(--blue); }
+.t-btn.pin-toggle.active {
+  background: linear-gradient(135deg,rgba(232,184,109,0.3),rgba(255,107,107,0.3));
+  color: var(--gold);
+}
+.t-logo {
+  width: auto !important;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+  border-radius: 12px;
+  text-decoration: none;
+}
+.brand-word {
+  font-family: "Clash Display","Rajdhani","Space Grotesk",sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.85);
+  white-space: nowrap;
+}
+.t-sep {
+  width: 24px;
+  height: 1px;
+  background: var(--glass-border);
+  margin: 2px 0;
+  flex: none;
+}
+#toolbar-bottom .t-sep { width: 1px; height: 20px; margin: 0 2px; }
+
+/* ── Layers panel ── */
+.layers-panel {
+  position: fixed;
+  top: 16px;
+  left: 80px;
+  z-index: 27;
+  width: 260px;
+  padding: 14px;
+  border-radius: var(--radius);
+  background: rgba(5,0,16,0.88);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  opacity: 0;
+  transform: translateX(-12px);
+  pointer-events: none;
+  transition: opacity var(--trans), transform var(--trans);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+.layers-panel.open { opacity: 1; transform: none; pointer-events: auto; }
+.layers-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.layers-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+}
+.layers-group { margin-bottom: 16px; }
+.layers-group:last-child { margin-bottom: 0; }
+.layers-group-label {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.layer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background var(--trans);
+}
+.layer-row:hover { background: rgba(255,255,255,0.05); }
+.layer-row span:not(.live-badge) {
+  flex: 1;
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+}
+.lr-icon { width: 16px; height: 16px; color: rgba(255,255,255,0.45); flex: none; }
+.live-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255,107,107,0.3);
+  color: var(--coral);
+  animation: livepulse 2s ease-in-out infinite;
+}
+@keyframes livepulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+/* ── CSS toggle switch for layer rows ── */
+.layer-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 34px;
+  height: 20px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 999px;
+  cursor: pointer;
+  position: relative;
+  transition: background var(--trans);
+  flex: none;
+  margin: 0;
+}
+.layer-switch::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: transform var(--trans), background var(--trans);
+}
+.layer-switch:checked { background: var(--blue); }
+.layer-switch:checked::after { transform: translateX(14px); }
+
+/* ── City search inside toolbar ── */
+#city-search { position: relative; width: 100%; }
+#search-toggle { width: 40px; height: 40px; display: grid; place-items: center; background: transparent; border: none; cursor: pointer; border-radius: 12px; color: rgba(255,255,255,0.85); transition: background var(--trans); }
+#search-toggle:hover { background: rgba(255,255,255,0.1); }
+#search-wrap {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 8px);
+  min-width: 220px;
+  background: rgba(5,0,16,0.92);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 8px;
+  display: none;
+  z-index: 100;
+}
+#search-wrap.open { display: block; }
+
+/* ── Glass panel upgrades ── */
+.pin-sheet-inner {
+  background: rgba(5,0,16,0.88) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  border-left: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+.stats-overlay {
+  background: rgba(5,0,16,0.92) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+.toast-msg {
+  background: rgba(5,0,16,0.9) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--glass-shadow) !important;
+}
+
+/* ── Loader pulse animation ── */
+@keyframes logo-pulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+#loader svg, .loader-logo {
+  animation: logo-pulse 2.4s ease-in-out infinite;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .brand-word { display: none; }
+  #toolbar-bottom { padding: 4px 6px; }
+  #toolbar-bottom .t-btn { width: 36px; height: 36px; }
+}
+
+/* ── Cinematic mode: override #earth-tools opacity back to 0 ── */
+body.cinematic-on #earth-tools { opacity: 0 !important; pointer-events: none !important; }
+
+/* ── Remove obsolete absolute positioning from old toolbar buttons ── */
+#earth-tools #btn-pin, #earth-tools #btn-screenshot, #earth-tools #btn-profile,
+#earth-tools #btn-sound, #earth-tools #btn-layers {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  left: auto !important;
+  bottom: auto !important;
 }

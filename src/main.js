@@ -172,6 +172,7 @@ pins.setOnChange(() => {
 // ── Layers popover + toggle switches ─────────────────────────────────────────
 const btnLayers = document.getElementById('btn-layers');
 const layersPanel = document.getElementById('layers-panel');
+const layersClose = document.getElementById('layers-close');
 const swAurora = document.getElementById('sw-aurora');
 const swSeismic = document.getElementById('sw-seismic');
 const swCountries = document.getElementById('sw-countries');
@@ -179,22 +180,20 @@ const swTerminator = document.getElementById('sw-terminator');
 
 function setSwitch(el, on) { el.classList.toggle('on', on); el.setAttribute('aria-checked', String(on)); }
 
-btnLayers.addEventListener('click', () => {
-  sound.click();
-  const open = layersPanel.classList.toggle('open');
-  layersPanel.setAttribute('aria-hidden', String(!open));
-  btnLayers.classList.toggle('active', open);
-});
-swAurora.addEventListener('click', () => { sound.click(); auroraOn = !auroraOn; aurora.setVisible(auroraOn); setSwitch(swAurora, auroraOn); });
-swTerminator.addEventListener('click', () => { sound.click(); terminatorOn = !terminatorOn; terminator.setVisible(terminatorOn); setSwitch(swTerminator, terminatorOn); });
-swSeismic.addEventListener('click', () => {
+function openLayers() { layersPanel?.classList.add('open'); layersPanel?.setAttribute('aria-hidden', 'false'); btnLayers?.classList.add('active'); }
+function closeLayers() { layersPanel?.classList.remove('open'); layersPanel?.setAttribute('aria-hidden', 'true'); btnLayers?.classList.remove('active'); }
+btnLayers?.addEventListener('click', () => { sound?.click?.(); if (layersPanel?.classList.contains('open')) closeLayers(); else openLayers(); });
+layersClose?.addEventListener('click', closeLayers);
+swAurora.addEventListener('change', () => { sound.click(); auroraOn = !auroraOn; aurora.setVisible(auroraOn); setSwitch(swAurora, auroraOn); });
+swTerminator.addEventListener('change', () => { sound.click(); terminatorOn = !terminatorOn; terminator.setVisible(terminatorOn); setSwitch(swTerminator, terminatorOn); });
+swSeismic.addEventListener('change', () => {
   sound.click();
   seismicOn = !seismicOn;
   seismic.setVisible(seismicOn);
   setSwitch(swSeismic, seismicOn);
   if (seismicOn) seismic.refresh(); // fetch on first/each enable
 });
-swCountries.addEventListener('click', () => {
+swCountries.addEventListener('change', () => {
   sound.click();
   countriesOn = !countriesOn;
   setSwitch(swCountries, countriesOn);
@@ -220,15 +219,36 @@ setTimeout(revealGlobe, 10000); // eslint-disable-line no-use-before-define
 
 const _noop = () => {};
 
-const liveFlights = (() => {
-  try { return createLiveFlights(earthView.earth); }
-  catch (e) { console.error('[WG] liveFlights failed:', e); return { setVisible: _noop, refresh: _noop, onCountChange: _noop, getClickables: () => [], getFlightData: () => null }; }
-})();
+let _liveFlightsInst = null;
+function _getLiveFlights() {
+  if (!_liveFlightsInst) {
+    try { _liveFlightsInst = createLiveFlights(earthView.earth); }
+    catch (e) { console.error('[WG] liveFlights:', e); _liveFlightsInst = { setVisible: _noop, refresh: _noop, onCountChange: _noop, getClickables: () => [], getFlightData: () => null }; }
+  }
+  return _liveFlightsInst;
+}
+const liveFlights = {
+  setVisible: (v) => _getLiveFlights().setVisible(v),
+  refresh: () => _getLiveFlights().refresh(),
+  onCountChange: (fn) => _getLiveFlights().onCountChange(fn),
+  getClickables: () => _liveFlightsInst ? _liveFlightsInst.getClickables() : [],
+  getFlightData: (id) => _liveFlightsInst ? _liveFlightsInst.getFlightData(id) : null,
+};
 
-const issTracker = (() => {
-  try { return createISSTracker(earthView.earth); }
-  catch (e) { console.error('[WG] issTracker failed:', e); return { update: _noop, getClickable: () => null, getInfo: () => null }; }
-})();
+let _issTrackerInst = null;
+function _getISSTracker() {
+  if (!_issTrackerInst) {
+    try { _issTrackerInst = createISSTracker(earthView.earth); }
+    catch (e) { console.error('[WG] issTracker:', e); _issTrackerInst = { update: _noop, getClickable: () => null, getInfo: () => null, setVisible: _noop }; }
+  }
+  return _issTrackerInst;
+}
+const issTracker = {
+  update: (dt) => _issTrackerInst?.update(dt),
+  getClickable: () => _issTrackerInst?.getClickable() ?? null,
+  getInfo: () => _issTrackerInst?.getInfo() ?? null,
+  setVisible: (v) => _issTrackerInst?.setVisible(v),
+};
 
 const timeZones = (() => {
   try { return createTimeZoneLayer(earthView.earth); }
@@ -286,26 +306,31 @@ liveFlights.onCountChange((n) => {
   if (flightsCount) flightsCount.textContent = n > 0 ? `${n.toLocaleString()} flights` : '';
 });
 
-swFlights?.addEventListener('click', () => {
+swFlights?.addEventListener('change', () => {
   sound.click(); flightsOn = !flightsOn;
   liveFlights.setVisible(flightsOn); setSwitch(swFlights, flightsOn);
   if (flightsOn) liveFlights.refresh();
 });
-swTimezones?.addEventListener('click', () => {
+swTimezones?.addEventListener('change', () => {
   sound.click(); timezonesOn = !timezonesOn;
   timeZones.setVisible(timezonesOn); setSwitch(swTimezones, timezonesOn);
 });
-swWeatherPins?.addEventListener('click', () => {
+swWeatherPins?.addEventListener('change', () => {
   sound.click(); weatherPinsOn = !weatherPinsOn;
   weatherPins.setVisible(weatherPinsOn); setSwitch(swWeatherPins, weatherPinsOn);
 });
-swPopulation?.addEventListener('click', () => {
+swPopulation?.addEventListener('change', () => {
   sound.click(); populationOn = !populationOn;
   population.setVisible(populationOn); setSwitch(swPopulation, populationOn);
 });
-swHeatmap?.addEventListener('click', () => {
+swHeatmap?.addEventListener('change', () => {
   sound.click(); heatmapOn = !heatmapOn;
   travelHeatmap.setVisible(heatmapOn, true); setSwitch(swHeatmap, heatmapOn);
+});
+const swISS = document.getElementById('sw-iss');
+swISS?.addEventListener('change', () => {
+  sound?.click?.();
+  issTracker?.setVisible?.(swISS.checked);
 });
 
 // Auto-on heatmap event from travelHeatmap.js
@@ -326,7 +351,7 @@ pins.setCardExtras((pin) => weatherPinsOn ? weatherPins.cardHtml(pin.id) : '');
 setInterval(() => { if (flightsOn) liveFlights.refresh(); }, 60 * 1000);
 
 // Seismic timeline shows/hides with the seismic layer (fires after main toggle)
-swSeismic.addEventListener('click', () => {
+swSeismic.addEventListener('change', () => {
   // At this point seismicOn has already been toggled by the earlier listener
   if (seismicOn) seismicTimeline.show(); else seismicTimeline.hide();
 });
@@ -410,6 +435,7 @@ const yearReview = createYearReview({ getPins: pins.getPins, getTrips: pins.getT
 // Buttons
 // (btn-surprise and btn-challenges wire their own click handlers inside their modules)
 document.getElementById('btn-planner').addEventListener('click', () => { sound.click(); tripPlanner.toggle(); });
+document.getElementById('btn-year')?.addEventListener('click', () => { sound?.click?.(); yearReview?.open?.(); });
 document.getElementById('stats-suggest').addEventListener('click', () => { stats.close(); aiSuggester.open(); });
 document.getElementById('stats-year').addEventListener('click', () => { stats.close(); yearReview.open(); });
 document.getElementById('profile-suggest').addEventListener('click', () => { profile.close(); aiSuggester.open(); });

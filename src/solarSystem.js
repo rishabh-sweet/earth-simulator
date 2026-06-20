@@ -41,6 +41,9 @@ export function buildSolarSystem(maxAnisotropy = 1, manager) {
     const t = loader.load(path);
     t.colorSpace = THREE.SRGBColorSpace; // these are color photos
     t.anisotropy = maxAnisotropy;        // keep them sharp at grazing angles
+    t.minFilter = THREE.LinearMipmapLinearFilter;
+    t.magFilter = THREE.LinearFilter;
+    t.generateMipmaps = true;
     return t;
   };
 
@@ -233,6 +236,9 @@ function makeRing(rings, loader, maxAnisotropy = 1) {
   const tex = loader.load(rings.texture);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = maxAnisotropy;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = true;
 
   // A shader so the rings read as semi-transparent bands with a warm-to-cool
   // colour gradient across the radius, rather than a flat opaque disc.
