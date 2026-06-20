@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { createPinLayer, localFromLatLng } from './pins.js';
 import { createFlightLayer } from './flightPaths.js';
+import { showPostcardModal } from './postcard.js';
 import { tween } from './tween.js';
 
 // Ties together: the 3D pin layer, trip collections, flight-path arcs,
@@ -633,6 +634,14 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
   $('pin-card-close').addEventListener('click', () => { closeSheet(card); sound.click(); });
   $('pin-edit').addEventListener('click', () => { if (cardId) openEdit(cardId); });
   $('pin-delete').addEventListener('click', () => { deleteConfirm.classList.add('show'); sound.click(); });
+  $('pin-postcard').addEventListener('click', () => {
+    if (!cardId) return;
+    const pin = store.find((p) => p.id === cardId);
+    if (!pin) return;
+    const trip = trips.find((t) => t.id === pin.tripId) || null;
+    showPostcardModal(pin, trip);
+    sound.click();
+  });
   $('pin-delete-no').addEventListener('click', () => { deleteConfirm.classList.remove('show'); });
   $('pin-delete-yes').addEventListener('click', doDelete);
 

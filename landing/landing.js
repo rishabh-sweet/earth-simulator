@@ -251,20 +251,6 @@ overlay.querySelectorAll('[data-back]').forEach((btn) => {
   btn.addEventListener('click', () => setStep(step - 1, true));
 });
 
-// Apple Sign In
-// TODO: Apple Sign In requires a paid Apple Developer account ($99/yr), a Services ID,
-// and configuration in Supabase Auth > Providers > Apple before this button works.
-document.getElementById('btn-apple')?.addEventListener('click', async () => {
-  try {
-    await supabase.auth.signInWithOAuth({
-      provider: 'apple',
-      options: { redirectTo: window.location.origin + '/globe/' },
-    });
-  } catch (e) {
-    console.error('Apple OAuth error:', e);
-  }
-});
-
 // Google Sign In
 document.getElementById('btn-google')?.addEventListener('click', async () => {
   try {
@@ -348,6 +334,39 @@ if (savedUser && savedUser.name) {
     label.textContent = `Welcome back, ${savedUser.name}`;
   });
 }
+
+// ── PWA install prompt ────────────────────────────────────────────────────────
+let deferredInstallPrompt = null;
+const pwaBanner   = document.getElementById('pwa-banner');
+const pwaInstall  = document.getElementById('pwa-install');
+const pwaDismiss  = document.getElementById('pwa-dismiss');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Show after 30s if not already dismissed this session
+  if (!sessionStorage.getItem('pwa-dismissed')) {
+    setTimeout(showPwaBanner, 30000);
+  }
+});
+
+function showPwaBanner() {
+  if (!deferredInstallPrompt || sessionStorage.getItem('pwa-dismissed')) return;
+  pwaBanner.hidden = false;
+}
+
+pwaInstall?.addEventListener('click', async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  if (outcome === 'accepted') deferredInstallPrompt = null;
+  pwaBanner.hidden = true;
+});
+
+pwaDismiss?.addEventListener('click', () => {
+  pwaBanner.hidden = true;
+  sessionStorage.setItem('pwa-dismissed', '1');
+});
 
 // ── Smooth anchor scroll with fixed-nav offset ────────────────────────────────
 document.querySelectorAll('a[href^="#"]').forEach((anchor) => {

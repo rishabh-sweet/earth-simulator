@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wanderglobe — Your Globe</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Wanderglobe" />
+    <meta name="theme-color" content="#0a0015" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
@@ -239,6 +245,7 @@
           <button type="button" id="pin-edit" class="btn-ghost">Edit</button>
           <button type="button" id="pin-delete" class="btn-danger">Delete</button>
         </div>
+        <button type="button" id="pin-postcard" class="btn-ghost full postcard-btn">🎴 Generate Postcard</button>
         <div id="pin-delete-confirm" class="delete-confirm">
           <span>Delete this pin?</span>
           <button type="button" id="pin-delete-yes" class="btn-danger-sm">Delete</button>
@@ -439,6 +446,22 @@
     <!-- Cloud sync status indicator (☁️ Syncing… / ✓ Saved / ⚠️ Offline) -->
     <div id="sync-status" class="sync-status" aria-live="polite"></div>
 
+    <!-- Offline indicator -->
+    <div id="offline-banner" class="offline-banner" hidden>📡 Offline — changes will sync when reconnected</div>
+
+    <!-- Postcard preview modal -->
+    <div id="postcard-modal" class="postcard-modal" role="dialog" aria-label="Postcard preview" aria-modal="true">
+      <div class="postcard-modal-inner">
+        <button id="postcard-close" class="postcard-close" aria-label="Close">×</button>
+        <canvas id="postcard-preview" class="postcard-canvas"></canvas>
+        <div class="postcard-actions">
+          <button id="postcard-download" type="button" class="postcard-btn-action">⬇️ Download</button>
+          <button id="postcard-copy" type="button" class="postcard-btn-action">📋 Copy</button>
+          <button id="postcard-share" type="button" class="postcard-btn-action" style="display:none">📤 Share</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Shared globe viewer banner (shown when ?share= URL param is present) -->
     <div id="viewer-banner" class="viewer-banner" hidden>
       <span id="viewer-name">👁 Viewing a Globe</span>
@@ -446,5 +469,17 @@
     </div>
 
     <script type="module" src="/src/main.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      }
+      function updateOnlineBanner() {
+        const b = document.getElementById('offline-banner');
+        if (b) b.hidden = navigator.onLine;
+      }
+      window.addEventListener('online',  updateOnlineBanner);
+      window.addEventListener('offline', updateOnlineBanner);
+      updateOnlineBanner();
+    </script>
   </body>
 </html>

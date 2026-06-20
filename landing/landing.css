@@ -713,7 +713,6 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 600; line-height: 1
 }
 .btn-oauth:hover { opacity: 0.88; transform: translateY(-1px); }
 .btn-oauth:active { transform: translateY(0); }
-.btn-apple { background: #000; color: #fff; border: 1px solid rgba(255,255,255,0.18); }
 .btn-google { background: #fff; color: #222; border: 1px solid rgba(0,0,0,0.12); }
 .oauth-divider {
   display: flex; align-items: center; gap: 12px;
@@ -724,6 +723,33 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 600; line-height: 1
   content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.12);
 }
 .pane h3.welcome { font-size: 22px; margin-bottom: 18px; }
+
+/* PWA install banner */
+.pwa-banner {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 14px 20px;
+  background: rgba(10,0,21,0.96); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(110,179,255,0.25);
+  transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+.pwa-banner:not([hidden]) { transform: translateY(0); }
+.pwa-banner[hidden] { display: none; }
+.pwa-banner-text { flex: 1; min-width: 180px; font-size: 14px; color: rgba(233,238,252,0.85); }
+.pwa-install-btn {
+  padding: 9px 20px; border-radius: 999px; border: none; cursor: pointer;
+  background: linear-gradient(135deg, #4fc3f7, #7a9bff);
+  color: #fff; font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  white-space: nowrap; transition: filter 0.15s ease;
+}
+.pwa-install-btn:hover { filter: brightness(1.12); }
+.pwa-dismiss-btn {
+  width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(255,255,255,0.08); color: rgba(233,238,252,0.6);
+  font-size: 18px; line-height: 1; flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+.pwa-dismiss-btn:hover { background: rgba(255,255,255,0.16); }
 .otp-row { display: flex; gap: 8px; margin-bottom: 20px; }
 .otp-digit {
   flex: 1; aspect-ratio: 1 / 1; text-align: center; font-size: 22px; font-weight: 600;

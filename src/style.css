@@ -1272,9 +1272,67 @@ body.cinematic-on #layers-panel {
 }
 .viewer-cta:hover { filter: brightness(1.15); }
 
+/* ── Postcard "Generate" button in pin card ───────────────────────────────── */
+.postcard-btn { margin-top: 12px; }
+
+/* ── Postcard preview modal ───────────────────────────────────────────────── */
+.postcard-modal {
+  position: fixed; inset: 0; z-index: 5000;
+  background: rgba(0,0,0,0.88); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+}
+.postcard-modal.open { opacity: 1; pointer-events: all; }
+.postcard-modal-inner {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px;
+  padding: 16px; max-width: min(90vw, 520px); width: 100%;
+}
+.postcard-canvas {
+  width: 100%; max-width: 480px; height: auto; border-radius: 16px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.7);
+  display: block;
+}
+.postcard-actions {
+  display: flex; gap: 10px; width: 100%; max-width: 480px;
+}
+.postcard-btn-action {
+  flex: 1; padding: 13px 10px; border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.08); color: #e9eefc;
+  font-family: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: background 0.15s ease;
+}
+.postcard-btn-action:hover { background: rgba(255,255,255,0.14); }
+.postcard-close {
+  position: absolute; top: -4px; right: -4px;
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(30,20,50,0.9); color: #e9eefc;
+  font-size: 18px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s ease;
+}
+.postcard-close:hover { background: rgba(255,255,255,0.18); }
+
+/* ── Offline indicator ────────────────────────────────────────────────────── */
+.offline-banner {
+  position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+  padding: 8px 18px; border-radius: 999px; white-space: nowrap;
+  background: rgba(10,0,21,0.92); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,154,114,0.4); color: #ff9a72;
+  font-size: 12px; letter-spacing: 0.03em; z-index: 300;
+  animation: fadeInUp 0.4s ease;
+}
+.offline-banner[hidden] { display: none; }
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 @media (max-width: 640px) {
   .challenges-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
   .surprise-card { bottom: 70px; }
   .stats-feature-row { flex-direction: column; }
   .stats-feature-row .btn-ghost { width: 100%; }
+  .postcard-modal-inner { padding: 12px; gap: 12px; }
 }
