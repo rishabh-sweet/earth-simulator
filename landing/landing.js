@@ -1,6 +1,30 @@
 // Wanderglobe landing — starfield, mini globe, scroll reveals, counters, nav, login.
 
 import { initMiniGlobe } from './miniGlobe.js';
+import { supabase } from '../src/supabase.js';
+
+// ── Handle OAuth callback or existing session ─────────────────────────────────
+(async () => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    // Session found (OAuth redirect or persisted) — save user and go to globe
+    const u = session.user;
+    const existing = (() => { try { return JSON.parse(localStorage.getItem('wanderglobe_user')); } catch { return null; } })();
+    if (!existing) {
+      const prof = {
+        name: u.user_metadata?.full_name || u.user_metadata?.name || (u.email || '').split('@')[0] || 'Traveller',
+        email: u.email,
+        avatar: u.user_metadata?.avatar_url || u.user_metadata?.picture || null,
+        memberSince: String(new Date().getFullYear()),
+      };
+      localStorage.setItem('wanderglobe_user', JSON.stringify(prof));
+    }
+    window.location.replace('/globe/');
+  } catch (e) {
+    // ignore — proceed with normal landing
+  }
+})();
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -225,6 +249,32 @@ document.addEventListener('keydown', (e) => {
 
 overlay.querySelectorAll('[data-back]').forEach((btn) => {
   btn.addEventListener('click', () => setStep(step - 1, true));
+});
+
+// Apple Sign In
+// TODO: Apple Sign In requires a paid Apple Developer account ($99/yr), a Services ID,
+// and configuration in Supabase Auth > Providers > Apple before this button works.
+document.getElementById('btn-apple')?.addEventListener('click', async () => {
+  try {
+    await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: { redirectTo: window.location.origin + '/globe/' },
+    });
+  } catch (e) {
+    console.error('Apple OAuth error:', e);
+  }
+});
+
+// Google Sign In
+document.getElementById('btn-google')?.addEventListener('click', async () => {
+  try {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/globe/' },
+    });
+  } catch (e) {
+    console.error('Google OAuth error:', e);
+  }
 });
 
 // Step 1 → "send" the OTP (demo only)

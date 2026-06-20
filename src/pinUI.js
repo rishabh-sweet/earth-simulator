@@ -231,10 +231,12 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
   function showChrome() {
     earthTools.classList.add('visible');
     statsEl.classList.add('visible');
+    document.getElementById('city-search')?.classList.add('visible');
   }
   function hideChrome() {
     earthTools.classList.remove('visible');
     statsEl.classList.remove('visible');
+    document.getElementById('city-search')?.classList.remove('visible');
     if (pinMode) setPinMode(false);
     closePanels();
   }
@@ -400,6 +402,24 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     notifyChange();
     sound.chime();
     return true;
+  }
+
+  // Open the Add-Pin panel at a known lat/lng with a pre-filled name.
+  // Used by city search so Nominatim already handled geocoding.
+  function openAddAtLatLng(lat, lng, suggestedName) {
+    editingId = null;
+    pendingLatLng = { lat, lng };
+    layer.setPending(lat, lng);
+    resetForm();
+    applyType('visited');
+    populateTripSelect('');
+    titleEl.textContent = 'Add Pin';
+    coordsEl.textContent = fmtCoords(lat, lng);
+    nameInput.placeholder = 'Place name';
+    if (suggestedName) nameInput.value = suggestedName;
+    geoToken++; // cancel any in-flight geocode
+    openSheet(panel);
+    sound.click();
   }
 
   // Replace the entire pin + trip store (called by cloud sync on initial load).
@@ -639,7 +659,7 @@ export function createPinManager({ earthView, sound, setHint, earthHint }) {
     toggleMode, isPinMode, panelOpen,
     showChrome, hideChrome, closePanels,
     pickPin, openAdd, openCard, openEdit, addWishlistPin,
-    replaceStore, loadSharedPins,
+    openAddAtLatLng, replaceStore, loadSharedPins,
     toggleFlights, openTrips, setOnChange: (fn) => { changeListener = fn; },
     getPins: () => store,
     getTrips: () => trips,

@@ -702,6 +702,28 @@ h1, h2, h3, h4 { font-family: var(--font-head); font-weight: 600; line-height: 1
 .field-row .field { flex: 1; }
 .otp-confirm { font-size: 13px; color: var(--mint); margin-bottom: 14px; }
 .otp-confirm[hidden] { display: none; }
+
+/* OAuth buttons */
+.btn-oauth {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 13px 18px; border-radius: 12px;
+  font-family: var(--font-body); font-size: 15px; font-weight: 500;
+  cursor: pointer; border: none; transition: opacity 0.18s ease, transform 0.18s ease;
+  margin-bottom: 10px;
+}
+.btn-oauth:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn-oauth:active { transform: translateY(0); }
+.btn-apple { background: #000; color: #fff; border: 1px solid rgba(255,255,255,0.18); }
+.btn-google { background: #fff; color: #222; border: 1px solid rgba(0,0,0,0.12); }
+.oauth-divider {
+  display: flex; align-items: center; gap: 12px;
+  color: var(--text-dim); font-size: 12px; letter-spacing: 0.04em;
+  margin: 14px 0 18px;
+}
+.oauth-divider::before, .oauth-divider::after {
+  content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.12);
+}
+.pane h3.welcome { font-size: 22px; margin-bottom: 18px; }
 .otp-row { display: flex; gap: 8px; margin-bottom: 20px; }
 .otp-digit {
   flex: 1; aspect-ratio: 1 / 1; text-align: center; font-size: 22px; font-weight: 600;

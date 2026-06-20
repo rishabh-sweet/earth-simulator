@@ -81,6 +81,21 @@
     <button id="btn-earth" class="ui-btn">⌂ Earth view</button>
     <div id="hint"></div>
 
+    <!-- City search (top-centre, Earth view only) -->
+    <div id="city-search" class="city-search">
+      <button id="search-toggle" class="search-icon-btn" aria-label="Search cities and places" title="Search">🔍</button>
+      <div id="search-expanded" class="search-expanded" hidden>
+        <input id="search-input" type="text" placeholder="Search cities &amp; places…" autocomplete="off" spellcheck="false" />
+        <button id="search-close" class="search-close-btn" aria-label="Close search" type="button">×</button>
+        <div id="search-results" class="search-results" hidden></div>
+      </div>
+    </div>
+    <!-- "Pin here?" prompt shown after flying to a search result -->
+    <div id="search-pin-prompt" class="search-pin-prompt" hidden>
+      <button id="search-pin-btn" type="button">📍 Pin here?</button>
+      <button id="search-pin-dismiss" class="search-pin-x" type="button" aria-label="Dismiss">×</button>
+    </div>
+
     <!-- Earth-view tool cluster (top-right; only in the Earth close-up view) -->
     <div id="earth-tools">
       <button id="btn-layers" class="ui-icon" aria-label="Map layers" aria-expanded="false">
@@ -316,6 +331,7 @@
         </div>
 
         <button type="button" id="profile-suggest" class="btn-ghost full">✨ Suggest My Next Trip</button>
+        <button type="button" id="btn-signout" class="btn-ghost full signout-btn">Sign Out</button>
 
         <div class="profile-link">
           <label>My public link</label>

@@ -22,6 +22,8 @@ import { getSunDirection } from './sun.js';
 import { tween, updateTweens } from './tween.js';
 import { SoundManager } from './sound.js';
 import { createCloudSync, emailSlug } from './cloudSync.js';
+import { supabase } from './supabase.js';
+import { createCitySearch } from './citySearch.js';
 
 // ── Renderer (shared by both views) ──────────────────────────────────────────
 // logarithmicDepthBuffer lets one camera handle both the 1-unit Earth and the
@@ -273,6 +275,20 @@ document.getElementById('stats-suggest').addEventListener('click', () => { stats
 document.getElementById('stats-year').addEventListener('click', () => { stats.close(); yearReview.open(); });
 document.getElementById('profile-suggest').addEventListener('click', () => { profile.close(); aiSuggester.open(); });
 
+// ── City search ───────────────────────────────────────────────────────────────
+const citySearch = createCitySearch({
+  flyTo: flyToLatLng,
+  openAddAtLatLng: pins.openAddAtLatLng,
+  sound,
+});
+
+// ── Sign out ──────────────────────────────────────────────────────────────────
+document.getElementById('btn-signout').addEventListener('click', async () => {
+  try { await supabase.auth.signOut(); } catch (e) {}
+  localStorage.removeItem('wanderglobe_user');
+  window.location.href = '/';
+});
+
 // Wire challenge unlock → Supabase
 challenges.setOnUnlock((id, date) => {
   const email = getCurrentUserEmail();
@@ -338,8 +354,32 @@ function revealGlobe() {
   doCloudPullOnLoad(); // async, non-blocking — updates pin layer when data arrives
 }
 
+// Handle OAuth callback (Google / Apple login redirects to /globe/).
+// If Supabase has a fresh session and localStorage has no user yet, auto-create
+// the profile from the provider's metadata (name, email, avatar).
+async function handleAuthSession() {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    const u = session.user;
+    const existing = getCurrentUserEmail();
+    if (!existing) {
+      const prof = {
+        name: u.user_metadata?.full_name || u.user_metadata?.name || (u.email || '').split('@')[0] || 'Traveller',
+        email: u.email,
+        avatar: u.user_metadata?.avatar_url || u.user_metadata?.picture || null,
+        memberSince: String(new Date().getFullYear()),
+      };
+      localStorage.setItem('wanderglobe_user', JSON.stringify(prof));
+      profile.refresh();
+      cloudSync.upsertUser(prof);
+    }
+  } catch (e) {}
+}
+
 // Pull cloud state once per session; merges into the live pin layer seamlessly.
 async function doCloudPullOnLoad() {
+  await handleAuthSession();
   const email = getCurrentUserEmail();
   if (!email) return;
   try {
